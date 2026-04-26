@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ORBISY",
-  description: "Software services for small businesses.",
+  title: "ORBISY — Stop Losing HVAC Jobs to Missed Calls and Slow Follow-Up",
+  description:
+    "ORBISY installs missed-call text-back, instant lead response, estimate follow-up, and booking tracking for growing HVAC companies. Book more jobs from leads you already have.",
 };
 
 export default function RootLayout({

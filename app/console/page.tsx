@@ -83,7 +83,7 @@ export default function ConsolePage() {
           color="purple"
         />
         <StatCard
-          title="Booked Meetings"
+          title="Booked Jobs"
           value={stats.bookedLeads}
           icon="📅"
           color="orange"

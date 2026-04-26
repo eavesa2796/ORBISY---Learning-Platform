@@ -1,200 +1,41 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState } from "react";
 import CalendlyButton from "@/components/CalendlyButton";
 import Image from "next/image";
 
-type Service = {
-  id: string;
-  tab: string;
-  kicker: string;
-  title: string;
-  sub: string;
-  chips: string[];
-  ctas: { label: string; href: string; variant: "primary" | "ghost" }[];
-  highlights: { title: string; bullets: string[] }[];
-  table: { title: string; rows: [string, string, string][] };
-  cards3: { title: string; text: string }[];
-};
-
-const services: Service[] = [
+const faqItems = [
   {
-    id: "automation",
-    tab: "HVAC Lead Capture & Booking System",
-    kicker: "Never miss another booking opportunity",
-    title:
-      "Capture every call, text, and web lead — then follow up automatically",
-    sub: "HVAC companies lose revenue when calls go to voicemail, estimates sit unanswered, and leads scatter across phones and inboxes. We install a centralized system that responds instantly, tracks every lead, and automates follow-ups so more inquiries become booked jobs.",
-    chips: [
-      "Missed-call text-back",
-      "Call tracking",
-      "Centralized CRM",
-      "Automated SMS/Email",
-    ],
-    ctas: [
-      { label: "Book a Free Growth Call", href: "#book", variant: "primary" },
-      { label: "See How It Works", href: "#workflows", variant: "ghost" },
-    ],
-    highlights: [
-      {
-        title: "What we fix first",
-        bullets: [
-          "Missed calls after hours or during peak season — instant text-back so leads don't call your competitor",
-          "Estimates sent but never followed up — automated reminders until they book",
-          "Leads scattered across phones, emails, and spreadsheets — one dashboard with full visibility",
-          "No tracking of which leads turn into booked jobs — simple reporting so you know what's working",
-        ],
-      },
-      {
-        title: "Built for growing HVAC companies",
-        bullets: [
-          "Works with your existing phone system and tools",
-          "No complicated software rollout or staff training",
-          "Clear documentation so you're never dependent on us",
-          "Scales as you add more technicians",
-        ],
-      },
-    ],
-    table: {
-      title: "Typical installation timeline",
-      rows: [
-        ["Week 1", "Audit current lead flow and booking process", "You + us"],
-        ["Week 2", "Install and customize your HVAC booking system", "Us"],
-        ["Week 3", "Monitor bookings and optimize follow-ups", "You + us"],
-      ],
-    },
-    cards3: [
-      {
-        title: "What you get",
-        text: "A complete HVAC lead capture and booking system that responds instantly, keeps your team accountable, and prevents missed opportunities. Every lead gets tracked from first contact to booked job.",
-      },
-      {
-        title: "Best for",
-        text: "HVAC companies with 5–20 technicians who are growing fast and can't afford to miss calls or lose leads to slow follow-up.",
-      },
-      {
-        title: "Typical outcome",
-        text: "20–40% increase in booked jobs within 60 days without spending more on ads — because you stop leaking leads and follow up consistently.",
-      },
-    ],
+    q: "How fast can you get the system installed?",
+    a: "Most clients are fully live within 3 weeks. Week 1 is the audit, Week 2 is installation, Week 3 is testing and optimization. After that we run monthly improvements.",
   },
   {
-    id: "websites",
-    tab: "HVAC Website & Online Booking",
-    kicker: "Turn website visitors into booked jobs",
-    title:
-      "A fast HVAC website that converts — with online booking and estimate requests",
-    sub: "Most HVAC websites look fine but don't convert. We build a mobile-first site with clear messaging, strong CTAs, online booking, and reliable lead routing so customers can book service 24/7 and your team responds fast.",
-    chips: ["Next.js", "Online booking", "Google integration", "Mobile-first"],
-    ctas: [
-      { label: "Book a Free Growth Call", href: "#book", variant: "primary" },
-      { label: "What’s Included", href: "#sections", variant: "ghost" },
-    ],
-    highlights: [
-      {
-        title: "Included",
-        bullets: [
-          "Conversion-focused homepage built for HVAC companies",
-          "Online booking and estimate request forms",
-          "Lead routing to your CRM with instant auto-reply",
-          "Google Business Profile integration",
-          "Speed optimization + basic SEO setup",
-        ],
-      },
-      {
-        title: "Optional add-ons",
-        bullets: [
-          "Service area landing pages (AC repair, heating, etc.)",
-          "Customer reviews widget and social proof",
-          "Maintenance plan signup forms",
-          "Emergency service CTAs",
-        ],
-      },
-    ],
-    table: {
-      title: "Website launch timeline (typical)",
-      rows: [
-        ["Week 1", "Copy, layout, and messaging approval", "Draft to final"],
-        ["Week 2", "Build site + mobile QA + booking setup", "Staging link"],
-        ["Week 3", "Go-live + tracking + post-launch tweaks", "Live site"],
-      ],
-    },
-    cards3: [
-      {
-        title: "What you get",
-        text: "An HVAC website designed to book jobs 24/7, not just look good — plus a lead pipeline you can track from website visit to completed job.",
-      },
-      {
-        title: "Best for",
-        text: "Growing HVAC companies that want to capture more online leads and let customers book service without calling during business hours.",
-      },
-      {
-        title: "Typical outcome",
-        text: "More inquiries convert to booked jobs because customers can book instantly and follow-up is automatic and consistent.",
-      },
-    ],
+    q: "Do I need to replace my phone system or software?",
+    a: "No. We work with your existing phone number, website, and tools. There is no software for your team to learn and no disruption to how you run the business today.",
   },
   {
-    id: "ops",
-    tab: "HVAC Dashboards & Job Tracking",
-    kicker: "Clarity for your daily operations",
-    title:
-      "Simple dashboards for scheduling, job tracking, and team visibility",
-    sub: "When operations live in texts, spreadsheets, and sticky notes, jobs get missed and technicians lose time. We build lightweight dashboards that match how HVAC teams actually work — so everyone knows what's scheduled, what's in progress, and what needs follow-up.",
-    chips: ["Job tracker", "Daily KPIs", "Technician schedules", "Reporting"],
-    ctas: [
-      { label: "Book a Free Growth Call", href: "#book", variant: "primary" },
-      { label: "See Example Tools", href: "#dashboard", variant: "ghost" },
-    ],
-    highlights: [
-      {
-        title: "Common builds for HVAC",
-        bullets: [
-          "Job tracker (status, assigned tech, next step)",
-          "Daily KPI dashboard (calls, bookings, revenue)",
-          "Technician schedule view (mobile-friendly)",
-          "Parts inventory + reorder alerts",
-        ],
-      },
-      {
-        title: "Designed for field teams",
-        bullets: [
-          "Works on phones and tablets in the truck",
-          "Simple permissions by role (owner, dispatcher, tech)",
-          "Documentation and training included",
-          "Integrates with your existing systems",
-        ],
-      },
-    ],
-    table: {
-      title: "Dashboard build plan (example)",
-      rows: [
-        ["Week 1", "Requirements + wireframes", "Screens + data model"],
-        ["Week 2", "Build MVP dashboard", "Core flows working"],
-        ["Week 3", "Polish + team training", "Go-live + handoff"],
-      ],
-    },
-    cards3: [
-      {
-        title: "What you get",
-        text: "A focused dashboard that matches your HVAC workflow so the team actually uses it — and stops improvising with texts and paper.",
-      },
-      {
-        title: "Best for",
-        text: "HVAC companies juggling multiple jobs, technicians, and follow-ups across too many tools and losing visibility.",
-      },
-      {
-        title: "Typical outcome",
-        text: "Fewer missed jobs, faster handoffs, and clearer accountability — without expensive enterprise software your team won't use.",
-      },
-    ],
+    q: "What if my team is already stretched thin?",
+    a: "That is exactly who this is built for. The whole point is to reduce the burden on your office staff, not add to it. The system responds, follows up, and tracks leads automatically.",
+  },
+  {
+    q: "Is this just another software subscription I have to manage?",
+    a: "No. ORBISY is a done-for-you service. We set everything up, monitor it, and send you a monthly report. You are not managing software — you are seeing more booked jobs.",
+  },
+  {
+    q: "What makes a company a good fit?",
+    a: "Residential HVAC companies with 5–20 technicians doing at least $500k per year in revenue. You are busy, you are growing, and you are losing jobs because calls get missed, estimates go unfollowed, or leads scatter across phones and inboxes.",
+  },
+  {
+    q: "What if I do not see results?",
+    a: "If you do not see a measurable increase in booked jobs within 60 days, we work for free until you do. That is our guarantee.",
   },
 ];
 
 export default function Homepage() {
-  const [activeId, setActiveId] = useState<string>("automation");
   const [sending, setSending] = useState(false);
   const [status, setStatus] = useState<null | "ok" | "error">(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -208,7 +49,7 @@ export default function Homepage() {
       businessName: String(formData.get("businessName") || ""),
       email: String(formData.get("email") || ""),
       message: String(formData.get("message") || ""),
-      website: String(formData.get("website") || ""), // honeypot
+      website: String(formData.get("website") || ""),
     };
 
     const res = await fetch("/api/contact", {
@@ -227,32 +68,11 @@ export default function Homepage() {
     }
   };
 
-  const active = useMemo(
-    () => services.find((s) => s.id === activeId) ?? services[0],
-    [activeId]
-  );
-
-  useEffect(() => {
-    const readHash = () => {
-      const h = (window.location.hash || "").replace("#", "").trim();
-      if (h && services.some((s) => s.id === h)) setActiveId(h);
-    };
-    readHash();
-    window.addEventListener("hashchange", readHash);
-    return () => window.removeEventListener("hashchange", readHash);
-  }, []);
-
-  const activate = (id: string, pushHash = true) => {
-    setActiveId(id);
-    if (pushHash) window.history.replaceState(null, "", `#${id}`);
-  };
-
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
     <div className="min-h-screen text-[color:var(--text)] antialiased bg-[linear-gradient(180deg,var(--bg),#0a0f1b_40%,#090d17)]">
-      <header className="mx-auto max-w-[1100px] px-5 pb-5 text-center">
-        <div className="mb-8 flex items-center justify-between">
+      {/* ── NAV ─────────────────────────────────────────────────────── */}
+      <nav className="mx-auto max-w-[1100px] px-5 pt-5 pb-2">
+        <div className="flex items-center justify-between">
           <a href="/" className="flex items-center gap-3 no-underline">
             <span className="sr-only">ORBISY</span>
             <Image
@@ -261,17 +81,23 @@ export default function Homepage() {
               width={260}
               height={80}
               priority
-              className="h-16 w-auto sm:h-20"
+              className="h-14 w-auto sm:h-16"
             />
           </a>
 
-          {/* Desktop Menu */}
+          {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-2">
             <a
-              href="#services"
+              href="#system"
               className="rounded-full border border-[color:var(--border)] bg-white/5 px-4 py-2 text-sm font-semibold text-[color:var(--text)] hover:bg-white/10 transition-colors"
             >
-              Services
+              How It Works
+            </a>
+            <a
+              href="#packages"
+              className="rounded-full border border-[color:var(--border)] bg-white/5 px-4 py-2 text-sm font-semibold text-[color:var(--text)] hover:bg-white/10 transition-colors"
+            >
+              Packages
             </a>
             <a
               href="/login"
@@ -279,472 +105,663 @@ export default function Homepage() {
             >
               Login
             </a>
-            <CalendlyButton className="cursor-pointer rounded-full border border-transparent bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] px-4 py-2 text-sm font-bold text-[#001] hover:opacity-90 transition-opacity">
-              Book Call
+            <CalendlyButton className="cursor-pointer rounded-full border border-transparent bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] px-5 py-2 text-sm font-bold text-[#001] hover:opacity-90 transition-opacity">
+              Book Free Audit
             </CalendlyButton>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile hamburger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden flex flex-col items-center justify-center w-10 h-10 rounded-lg border border-[color:var(--border)] bg-white/5 hover:bg-white/10 transition-colors"
             aria-label="Toggle menu"
           >
             <span
-              className={`block w-5 h-0.5 bg-[color:var(--text)] transition-all ${
-                mobileMenuOpen ? "rotate-45 translate-y-1.5" : ""
-              }`}
-            ></span>
+              className={`block w-5 h-0.5 bg-[color:var(--text)] transition-all ${mobileMenuOpen ? "rotate-45 translate-y-1.5" : ""}`}
+            />
             <span
-              className={`block w-5 h-0.5 bg-[color:var(--text)] mt-1 transition-all ${
-                mobileMenuOpen ? "opacity-0" : ""
-              }`}
-            ></span>
+              className={`block w-5 h-0.5 bg-[color:var(--text)] mt-1 transition-all ${mobileMenuOpen ? "opacity-0" : ""}`}
+            />
             <span
-              className={`block w-5 h-0.5 bg-[color:var(--text)] mt-1 transition-all ${
-                mobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
-              }`}
-            ></span>
+              className={`block w-5 h-0.5 bg-[color:var(--text)] mt-1 transition-all ${mobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""}`}
+            />
           </button>
         </div>
 
-        {/* Mobile Menu Dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden mb-6 rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden mt-3 rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] p-4 space-y-2">
             <a
-              href="#services"
+              href="#system"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 rounded-lg text-[color:var(--text)] hover:bg-white/5 transition-colors font-semibold"
+              className="block px-4 py-3 rounded-lg text-[color:var(--text)] hover:bg-white/5 font-semibold"
             >
-              Services
+              How It Works
+            </a>
+            <a
+              href="#packages"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-4 py-3 rounded-lg text-[color:var(--text)] hover:bg-white/5 font-semibold"
+            >
+              Packages
             </a>
             <a
               href="/login"
               onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 rounded-lg text-[color:var(--text)] hover:bg-white/5 transition-colors font-semibold"
+              className="block px-4 py-3 rounded-lg text-[color:var(--text)] hover:bg-white/5 font-semibold"
             >
               Login
             </a>
-            <CalendlyButton className="cursor-pointer w-full block px-4 py-3 rounded-lg bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001] font-bold hover:opacity-90 transition-opacity">
-              Book Call
+            <CalendlyButton className="cursor-pointer w-full block text-center px-4 py-3 rounded-lg bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001] font-bold hover:opacity-90">
+              Book Free Audit
             </CalendlyButton>
           </div>
         )}
+      </nav>
 
-        <div className="text-[color:var(--muted)] font-semibold tracking-[.12em] uppercase">
-          Built for Growing HVAC Companies
+      {/* ── HERO ────────────────────────────────────────────────────── */}
+      <header className="mx-auto max-w-[1100px] px-5 pt-12 pb-16 text-center">
+        <div className="inline-block rounded-full border border-[color:var(--border)] bg-white/5 px-4 py-1.5 text-xs font-bold tracking-[.14em] uppercase text-[color:var(--muted)] mb-5">
+          For Residential HVAC Companies · 5–20 Techs · $500k+ Revenue
         </div>
 
-        <h1 className="mt-2 text-[clamp(28px,4vw,44px)] leading-[1.1] font-extrabold">
-          Book 20–40% More HVAC Jobs in 60 Days — Without Hiring More Office
-          Staff
+        <h1 className="text-[clamp(30px,4.5vw,52px)] leading-[1.08] font-extrabold tracking-tight max-w-[18ch] mx-auto">
+          Stop Losing HVAC Jobs to{" "}
+          <span className="bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] bg-clip-text text-transparent">
+            Missed Calls and Slow Follow-Up
+          </span>
         </h1>
 
-        <p className="mx-auto mt-3 max-w-[70ch] text-[color:var(--muted)]">
-          ORBISY installs automated lead capture and follow-up systems for
-          growing HVAC companies so you never miss a call, lead, or booking
-          opportunity.
+        <p className="mx-auto mt-5 max-w-[64ch] text-lg text-[color:var(--muted)] leading-relaxed">
+          ORBISY installs missed-call text-back, instant lead response, estimate
+          follow-up, and booking tracking for growing HVAC companies — so you
+          book more jobs from the leads you already have.
         </p>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          <CalendlyButton className="cursor-pointer inline-flex items-center gap-2 rounded-xl px-4 py-3 font-bold border border-[color:var(--border)] shadow-[var(--shadow)] bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001]">
-            Book a Free Growth Call →
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <CalendlyButton className="cursor-pointer inline-flex items-center gap-2 rounded-xl px-6 py-3.5 font-bold text-base bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001] hover:opacity-90 transition-opacity shadow-[0_4px_24px_rgba(101,214,255,0.25)]">
+            Book a Free HVAC Revenue Audit →
           </CalendlyButton>
           <a
-            className="inline-flex items-center gap-2 rounded-xl px-4 py-3 font-bold border border-[color:var(--border)] bg-transparent text-[color:var(--text)]"
-            href="#work"
+            href="#system"
+            className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 font-bold text-base border border-[color:var(--border)] bg-white/5 text-[color:var(--text)] hover:bg-white/10 transition-colors"
           >
-            See How It Works
+            See What We Fix
           </a>
         </div>
 
-        <div className="mt-6 flex flex-col items-center justify-center gap-3">
-          {/* Chips */}
-          <div className="flex flex-wrap items-center justify-center gap-2 px-2">
-            {[
-              "5–20 technicians",
-              "Residential HVAC",
-              "Commercial HVAC",
-              "Heating & Cooling",
-              "Emergency Service",
-              "Maintenance Plans",
-            ].map((t) => (
-              <span
-                key={t}
-                className="rounded-full border border-[color:var(--border)] bg-white/5 px-3 py-1 text-[13px] text-[color:var(--muted)]"
-              >
-                {t}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-6 text-sm text-[color:var(--muted)]">
+          {["No software to learn", "Live in 3 weeks", "60-day guarantee"].map(
+            (t) => (
+              <span key={t} className="flex items-center gap-1.5">
+                <span className="text-[color:var(--accent-2)]">✓</span> {t}
               </span>
-            ))}
-          </div>
-
-          {/* Pricing line */}
-          <p className="text-center text-sm text-[color:var(--muted)]">
-            Best for HVAC companies doing at least <strong>$500k/year</strong>{" "}
-            in revenue.
-          </p>
+            ),
+          )}
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1100px] px-5 pb-16" id="services">
-        <div className="mt-6 overflow-hidden rounded-[calc(var(--radius)+4px)] border border-[color:var(--border)] bg-white/5 shadow-[var(--shadow)]">
-          <div
-            className="sticky top-0 z-30 flex flex-wrap gap-2 border-b border-[color:var(--border)] bg-white/5 p-2 backdrop-blur"
-            role="tablist"
-            aria-label="Service Tabs"
-          >
-            {services.map((s, idx) => {
-              const selected = s.id === activeId;
-              return (
-                <button
-                  key={s.id}
-                  role="tab"
-                  aria-selected={selected}
-                  aria-controls={`panel-${s.id}`}
-                  id={`tab-${s.id}`}
-                  onClick={() => activate(s.id)}
-                  onKeyDown={(e) => {
-                    if (
-                      ["ArrowRight", "ArrowLeft", "Home", "End"].includes(e.key)
-                    )
-                      e.preventDefault();
-                    const focusBy = (nextIdx: number) => {
-                      const el = document.getElementById(
-                        `tab-${services[nextIdx].id}`
-                      );
-                      (el as HTMLButtonElement | null)?.focus();
-                    };
-                    if (e.key === "ArrowRight")
-                      focusBy((idx + 1) % services.length);
-                    if (e.key === "ArrowLeft")
-                      focusBy((idx - 1 + services.length) % services.length);
-                    if (e.key === "Home") focusBy(0);
-                    if (e.key === "End") focusBy(services.length - 1);
-                  }}
-                  className={
-                    "rounded-full border px-4 py-2 font-semibold tracking-[.01em] " +
-                    (selected
-                      ? "border-transparent bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001]"
-                      : "border-[color:var(--border)] bg-[color:var(--panel)] text-[color:var(--text)]")
-                  }
+      <main className="mx-auto max-w-[1100px] px-5 pb-20 space-y-16">
+        {/* ── PAIN SECTION ─────────────────────────────────────────── */}
+        <section>
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-8 md:p-10">
+            <div className="text-xs font-bold tracking-[.14em] uppercase text-[color:var(--muted)] mb-3">
+              The Problem
+            </div>
+            <h2 className="text-[clamp(22px,3.2vw,34px)] font-extrabold leading-tight max-w-[30ch]">
+              Most HVAC companies do not need more leads first. They need to
+              stop losing the ones they already paid for.
+            </h2>
+            <p className="mt-4 text-[color:var(--muted)] max-w-[70ch]">
+              Every missed call, unanswered web form, and unfinished estimate
+              follow-up is a job that goes to your competitor. Not because you
+              lack customers — but because revenue is leaking out of your
+              process before it ever reaches your dispatcher.
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  icon: "📵",
+                  title: "Missed calls during peak hours",
+                  desc: "Techs are on jobs. Office staff are on other calls. Customers call the next HVAC company. You never know it happened.",
+                },
+                {
+                  icon: "🌙",
+                  title: "After-hours requests go cold",
+                  desc: "A homeowner's AC breaks at 9pm. They fill out your form or call. Nobody responds until morning — and they've already booked someone else.",
+                },
+                {
+                  icon: "📋",
+                  title: "Estimates sent, never followed up",
+                  desc: "You send a quote and wait. The customer wanted the job done — they just needed one more touchpoint. Your competitor followed up. You didn't.",
+                },
+                {
+                  icon: "📥",
+                  title: "Website leads sit in inboxes",
+                  desc: "Web forms go to an email account nobody monitors closely. A lead that came in at noon gets a reply at 4pm — or not at all.",
+                },
+                {
+                  icon: "📊",
+                  title: "No visibility from lead to booked job",
+                  desc: "You have no clear picture of how many calls came in, how many turned into estimates, or how many turned into work orders.",
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-xl border border-[color:var(--border)] bg-white/5 p-5"
                 >
-                  {s.tab}
-                </button>
-              );
-            })}
+                  <div className="text-2xl mb-3">{item.icon}</div>
+                  <h3 className="font-bold text-base mb-1.5">{item.title}</h3>
+                  <p className="text-[color:var(--muted)] text-sm leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
+        </section>
 
-          <div className="relative">
-            {services.map((s) => {
-              const isActive = s.id === activeId;
-              const anchor =
-                s.id === "automation"
-                  ? "workflows"
-                  : s.id === "websites"
-                  ? "sections"
-                  : "dashboard";
+        {/* ── SYSTEM SECTION ───────────────────────────────────────── */}
+        <section id="system">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-8 md:p-10">
+            <div className="text-xs font-bold tracking-[.14em] uppercase text-[color:var(--muted)] mb-3">
+              The System
+            </div>
+            <h2 className="text-[clamp(22px,3.2vw,34px)] font-extrabold leading-tight">
+              The ORBISY HVAC Revenue Recovery System
+            </h2>
+            <p className="mt-4 text-[color:var(--muted)] max-w-[70ch]">
+              ORBISY captures every lead, responds instantly, follows up
+              consistently, and tracks every opportunity from first contact to
+              booked job — without hiring more office staff.
+            </p>
 
-              return (
-                <section
-                  key={s.id}
-                  id={`panel-${s.id}`}
-                  role="tabpanel"
-                  tabIndex={0}
-                  aria-labelledby={`tab-${s.id}`}
-                  className={"p-6 " + (isActive ? "block" : "hidden")}
-                  style={
-                    isActive
-                      ? ({
-                          animation: "fade .25s ease-in",
-                        } as React.CSSProperties)
-                      : undefined
-                  }
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  num: "01",
+                  title: "Missed-Call Text-Back",
+                  desc: "When a call goes unanswered, an automatic text goes out within seconds. Customers stay in your pipeline instead of calling the next company on Google.",
+                },
+                {
+                  num: "02",
+                  title: "Instant Web Lead Response",
+                  desc: "Every form submission on your website gets an immediate reply — SMS or email — confirming receipt and setting the next step. No more cold leads from slow replies.",
+                },
+                {
+                  num: "03",
+                  title: "Estimate Follow-Up Sequence",
+                  desc: "Quotes that don't close get a structured follow-up over days and weeks — until the customer books, declines, or asks for a call. Nothing falls through.",
+                },
+                {
+                  num: "04",
+                  title: "Review Request Automation",
+                  desc: "After a completed job, customers automatically get a review request at the right time. More 5-star reviews without your team remembering to ask.",
+                },
+                {
+                  num: "05",
+                  title: "Booking Pipeline Dashboard",
+                  desc: "One simple view shows calls missed, leads captured, follow-ups sent, and jobs booked. You see exactly where revenue is being recovered — and where it's still leaking.",
+                },
+                {
+                  num: "06",
+                  title: "Monthly Performance Report",
+                  desc: "Every month you get a clear report: leads in, jobs booked, estimated revenue recovered. No guesswork about whether the system is working.",
+                },
+              ].map((item) => (
+                <div
+                  key={item.num}
+                  className="rounded-xl border border-[color:var(--border)] bg-white/5 p-5"
                 >
-                  <div className="rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--panel)] p-6">
-                    <div className="text-[color:var(--muted)] font-semibold tracking-[.12em] uppercase text-sm">
-                      {s.kicker}
-                    </div>
-                    <h2 className="mt-2 text-[clamp(20px,3vw,26px)] font-extrabold">
-                      {s.title}
-                    </h2>
-                    <p className="mt-2 text-[color:var(--muted)] max-w-[70ch]">
-                      {s.sub}
-                    </p>
+                  <div className="text-xs font-bold text-[color:var(--accent)] tracking-[.12em] mb-2">
+                    {item.num}
+                  </div>
+                  <h3 className="font-bold text-base mb-2">{item.title}</h3>
+                  <p className="text-[color:var(--muted)] text-sm leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+              ))}
+            </div>
 
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {s.chips.map((c) => (
-                        <span
-                          key={c}
-                          className="rounded-full border border-[color:var(--border)] bg-white/5 px-3 py-1 text-[13px] text-[color:var(--muted)]"
-                        >
-                          {c}
+            <div className="mt-8 rounded-xl border border-[color:var(--border)] bg-white/[0.03] p-6 flex flex-col md:flex-row md:items-center gap-5">
+              <div className="flex-1">
+                <h3 className="font-bold text-lg">
+                  The result: more booked jobs from leads you already have
+                </h3>
+                <p className="mt-2 text-[color:var(--muted)] text-sm">
+                  Clients typically see a 20–40% increase in booked jobs within
+                  60 days — not from spending more on ads, but from stopping the
+                  revenue that was already leaking out.
+                </p>
+              </div>
+              <CalendlyButton className="cursor-pointer shrink-0 inline-flex items-center gap-2 rounded-xl px-5 py-3 font-bold bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001] hover:opacity-90 transition-opacity whitespace-nowrap">
+                Book a Free Audit →
+              </CalendlyButton>
+            </div>
+          </div>
+        </section>
+
+        {/* ── PACKAGES ─────────────────────────────────────────────── */}
+        <section id="packages">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-8 md:p-10">
+            <div className="text-xs font-bold tracking-[.14em] uppercase text-[color:var(--muted)] mb-3">
+              Packages
+            </div>
+            <h2 className="text-[clamp(22px,3.2vw,34px)] font-extrabold leading-tight mb-2">
+              One system, three levels of coverage
+            </h2>
+            <p className="text-[color:var(--muted)] max-w-[60ch]">
+              Start where you need to. Every package is done-for-you —
+              installed, monitored, and optimized by ORBISY.
+            </p>
+
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {[
+                {
+                  name: "Starter",
+                  tagline: "Stop losing leads immediately",
+                  cta: "Get Pricing",
+                  features: [
+                    "Missed-call text-back",
+                    "Instant web form reply",
+                    "Simple booking dashboard",
+                    "Email support",
+                  ],
+                  highlight: false,
+                },
+                {
+                  name: "Growth",
+                  tagline: "Convert and close more jobs",
+                  cta: "Get Pricing",
+                  features: [
+                    "Everything in Starter",
+                    "Estimate follow-up sequence",
+                    "Review request automation",
+                    "Monthly performance report",
+                    "Priority support",
+                  ],
+                  highlight: true,
+                },
+                {
+                  name: "Premium",
+                  tagline: "Full revenue recovery system",
+                  cta: "Get Pricing",
+                  features: [
+                    "Everything in Growth",
+                    "Landing page / website improvements",
+                    "CRM integration",
+                    "Call tracking & attribution",
+                    "Quarterly strategy review",
+                    "Dedicated account manager",
+                  ],
+                  highlight: false,
+                },
+              ].map((pkg) => (
+                <div
+                  key={pkg.name}
+                  className={`rounded-xl border p-6 flex flex-col ${
+                    pkg.highlight
+                      ? "border-[color:var(--accent)] bg-[color:var(--accent)]/5 shadow-[0_0_32px_rgba(101,214,255,0.08)]"
+                      : "border-[color:var(--border)] bg-white/5"
+                  }`}
+                >
+                  {pkg.highlight && (
+                    <div className="text-[10px] font-bold tracking-[.14em] uppercase text-[color:var(--accent)] mb-3">
+                      Most Popular
+                    </div>
+                  )}
+                  <h3 className="text-xl font-extrabold">{pkg.name}</h3>
+                  <p className="mt-1 text-sm text-[color:var(--muted)]">
+                    {pkg.tagline}
+                  </p>
+                  <div className="mt-4 mb-5 border-b border-[color:var(--border)]" />
+                  <ul className="space-y-2.5 flex-1">
+                    {pkg.features.map((f) => (
+                      <li
+                        key={f}
+                        className="flex items-start gap-2 text-sm text-[color:var(--muted)]"
+                      >
+                        <span className="text-[color:var(--accent-2)] mt-0.5">
+                          ✓
                         </span>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-3">
-                      {s.ctas.map((cta) => (
-                        <a
-                          key={cta.label}
-                          href={cta.href}
-                          className={
-                            "inline-flex items-center gap-2 rounded-xl px-4 py-3 font-bold border border-[color:var(--border)] " +
-                            (cta.variant === "primary"
-                              ? "bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001] border-transparent"
-                              : "bg-transparent text-[color:var(--text)]")
-                          }
-                        >
-                          {cta.label} <span aria-hidden>→</span>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid gap-4 md:grid-cols-2">
-                    {s.highlights.map((h) => (
-                      <div
-                        key={h.title}
-                        className="rounded-xl border border-[color:var(--border)] bg-white/5 p-4"
-                      >
-                        <h3 className="text-lg font-bold">{h.title}</h3>
-                        <ul className="mt-2 list-disc pl-5 text-[color:var(--muted)]">
-                          {h.bullets.map((b) => (
-                            <li key={b}>{b}</li>
-                          ))}
-                        </ul>
-                      </div>
+                        {f}
+                      </li>
                     ))}
-                  </div>
-
-                  <div
-                    className="mt-5 rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--panel)] p-6"
-                    id={anchor}
-                  >
-                    <h2 className="text-[clamp(20px,3vw,26px)] font-extrabold">
-                      {s.table.title}
-                    </h2>
-                    <div className="mt-3 overflow-auto">
-                      <table className="w-full min-w-[520px] border-collapse">
-                        <thead>
-                          <tr className="text-[color:var(--muted)]">
-                            <th className="border-b border-[color:var(--border)] p-2 text-left font-bold w-[160px]">
-                              When
-                            </th>
-                            <th className="border-b border-[color:var(--border)] p-2 text-left font-bold">
-                              What happens
-                            </th>
-                            <th className="border-b border-[color:var(--border)] p-2 text-left font-bold">
-                              Owner
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {s.table.rows.map((r, i) => (
-                            <tr key={i}>
-                              <td className="border-b border-[color:var(--border)] p-2">
-                                {r[0]}
-                              </td>
-                              <td className="border-b border-[color:var(--border)] p-2">
-                                {r[1]}
-                              </td>
-                              <td className="border-b border-[color:var(--border)] p-2 text-[color:var(--muted)]">
-                                {r[2]}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid gap-4 md:grid-cols-3">
-                    {s.cards3.map((c) => (
-                      <div
-                        key={c.title}
-                        className="rounded-xl border border-[color:var(--border)] bg-white/5 p-4"
-                      >
-                        <h3 className="text-lg font-bold">{c.title}</h3>
-                        <p className="mt-2 text-[color:var(--muted)]">
-                          {c.text}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div
-                    className="mt-5 rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--panel)] p-6"
-                    id="book"
-                  >
-                    <h2 className="text-[clamp(20px,3vw,26px)] font-extrabold">
-                      Book a Free 30-Minute HVAC Growth Call
-                    </h2>
-                    <p className="mt-2 text-[color:var(--muted)] max-w-[80ch]">
-                      We'll review your current lead flow and show you exactly
-                      where booking opportunities are being missed. You'll get a
-                      clear action plan to increase booked jobs—whether you work
-                      with us or not.
-                    </p>
-                    <p className="mt-2 text-[color:var(--muted)] text-sm">
-                      <strong>Best for:</strong> HVAC companies with 5–20
-                      technicians doing at least $500k/year in revenue.
-                    </p>
-
-                    <div className="mt-4 grid gap-4 md:grid-cols-2">
-                      <div className="rounded-xl border border-[color:var(--border)] bg-white/5 p-4">
-                        <h3 className="text-lg font-bold">
-                          Request your free call
-                        </h3>
-                        <form className="mt-3 grid gap-3" onSubmit={onSubmit}>
-                          <input
-                            name="website"
-                            tabIndex={-1}
-                            autoComplete="off"
-                            className="hidden"
-                            aria-hidden="true"
-                          />
-
-                          <label className="grid gap-1">
-                            <span className="text-sm text-[color:var(--muted)]">
-                              Business name
-                            </span>
-                            <input
-                              name="businessName"
-                              className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] px-3 py-2 outline-none focus:ring-2 focus:ring-white/20"
-                              placeholder="Acme HVAC"
-                            />
-                          </label>
-
-                          <label className="grid gap-1">
-                            <span className="text-sm text-[color:var(--muted)]">
-                              Email
-                            </span>
-                            <input
-                              name="email"
-                              type="email"
-                              required
-                              className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] px-3 py-2 outline-none focus:ring-2 focus:ring-white/20"
-                              placeholder="you@business.com"
-                            />
-                          </label>
-
-                          <label className="grid gap-1">
-                            <span className="text-sm text-[color:var(--muted)]">
-                              Tell us about your current lead process
-                            </span>
-                            <textarea
-                              name="message"
-                              required
-                              className="min-h-[96px] rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] px-3 py-2 outline-none focus:ring-2 focus:ring-white/20"
-                              placeholder="Example: Calls come in during the day, some go to voicemail after hours. We send estimates but don't always follow up…"
-                            />
-                          </label>
-
-                          <button
-                            className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-bold border border-transparent bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001] disabled:opacity-60"
-                            type="submit"
-                            disabled={sending}
-                          >
-                            {sending ? "Sending..." : "Book My Free Call"}{" "}
-                            <span aria-hidden>→</span>
-                          </button>
-
-                          {status === "ok" && (
-                            <p className="text-sm text-[color:var(--accent-2)]">
-                              Sent! I’ll reply soon with next steps.
-                            </p>
-                          )}
-                          {status === "error" && (
-                            <p className="text-sm text-red-300">
-                              Something went wrong. Try again or email directly.
-                            </p>
-                          )}
-                        </form>
-                      </div>
-
-                      <div className="rounded-xl border border-[color:var(--border)] bg-white/5 p-4">
-                        <h3 className="text-lg font-bold">What you’ll get</h3>
-                        <ul className="mt-2 list-disc pl-5 text-[color:var(--muted)]">
-                          <li>30-minute HVAC growth call</li>
-                          <li>
-                            Analysis of where you're losing booking
-                            opportunities
-                          </li>
-                          <li>Clear action plan to increase booked jobs</li>
-                          <li>Next steps (whether you work with us or not)</li>
-                        </ul>
-
-                        <div className="mt-4 rounded-xl border border-[color:var(--border)] bg-white/5 p-4">
-                          <h4 className="font-bold">Our guarantee</h4>
-                          <p className="mt-1 text-[color:var(--muted)] text-sm">
-                            If you don't see a measurable increase in booked
-                            jobs within 60 days, we work for free until you do.
-                          </p>
-                        </div>
-
-                        <div className="mt-4 rounded-xl border border-[color:var(--border)] bg-white/5 p-4">
-                          <h4 className="font-bold">Prefer email?</h4>
-                          <p className="mt-1 text-[color:var(--muted)]">
-                            <a
-                              className="text-[color:var(--accent)]"
-                              href="mailto:info@orbisy.com"
-                            >
-                              info@orbisy.com
-                            </a>
-                            <br />
-                            <span className="text-[color:var(--muted)]">
-                              (224) 323-6231
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              );
-            })}
-          </div>
-
-          <div id="work" className="p-6">
-            <div className="rounded-[var(--radius)] border border-[color:var(--border)] bg-[color:var(--panel)] p-6">
-              <h2 className="text-[clamp(20px,3vw,26px)] font-extrabold">
-                How it works
-              </h2>
-              <div className="mt-3 grid gap-4 md:grid-cols-2">
-                <div>
-                  <p className="text-[color:var(--muted)]">
-                    Most HVAC companies don't need "more leads"—they need to
-                    stop losing the ones they already get. We start by fixing
-                    your lead capture and follow-up process, then optimize for
-                    maximum bookings.
-                  </p>
-                  <ol className="mt-3 list-decimal pl-5 text-[color:var(--muted)]">
-                    <li>Audit your current lead flow and booking process</li>
-                    <li>Install and customize your HVAC booking system</li>
-                    <li>Monitor bookings and optimize follow-ups</li>
-                  </ol>
-                </div>
-                <div className="rounded-xl border border-[color:var(--border)] bg-white/5 p-4">
-                  <h3 className="text-lg font-bold">Good fit if you…</h3>
-                  <ul className="mt-2 list-disc pl-5 text-[color:var(--muted)]">
-                    <li>Have 5–20 technicians and doing $500k+/year</li>
-                    <li>Miss calls after hours or during peak demand</li>
-                    <li>Send estimates but follow-up isn't consistent</li>
-                    <li>Lose visibility on which leads become booked jobs</li>
                   </ul>
-                  <p className="mt-3 text-[color:var(--muted)] text-sm italic">
-                    Every missed call or forgotten follow-up is revenue going to
-                    your competitors.
+                  <CalendlyButton
+                    className={`cursor-pointer mt-6 w-full inline-flex items-center justify-center rounded-xl px-4 py-3 font-bold text-sm transition-opacity hover:opacity-90 ${
+                      pkg.highlight
+                        ? "bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001]"
+                        : "border border-[color:var(--border)] bg-white/5 text-[color:var(--text)]"
+                    }`}
+                  >
+                    {pkg.cta} →
+                  </CalendlyButton>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-5 text-center text-sm text-[color:var(--muted)]">
+              Not sure which fits?{" "}
+              <CalendlyButton className="cursor-pointer inline text-[color:var(--accent)] underline underline-offset-2 bg-transparent border-none font-semibold">
+                Book a free audit
+              </CalendlyButton>{" "}
+              and we will recommend the right starting point.
+            </p>
+          </div>
+        </section>
+
+        {/* ── INSTALLATION PROCESS ─────────────────────────────────── */}
+        <section id="installation">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-8 md:p-10">
+            <div className="text-xs font-bold tracking-[.14em] uppercase text-[color:var(--muted)] mb-3">
+              Installation
+            </div>
+            <h2 className="text-[clamp(22px,3.2vw,34px)] font-extrabold leading-tight mb-2">
+              Live in 3 weeks. No disruption to your team.
+            </h2>
+            <p className="text-[color:var(--muted)] max-w-[64ch]">
+              We do the work. Your team keeps dispatching, quoting, and running
+              jobs. Here is how it works:
+            </p>
+
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                {
+                  week: "Week 1",
+                  title: "Audit",
+                  desc: "We review your current lead flow: calls, website forms, booking process, follow-up habits, and estimate pipeline. We identify exactly where jobs are being lost.",
+                },
+                {
+                  week: "Week 2",
+                  title: "Install",
+                  desc: "We install and configure missed-call text-back, web lead response, estimate follow-up sequences, and your dashboard. Nothing for your team to set up.",
+                },
+                {
+                  week: "Week 3",
+                  title: "Test & Train",
+                  desc: "We run every trigger, test every message, confirm routing, and walk your office staff through the dashboard in one 30-minute call.",
+                },
+                {
+                  week: "Ongoing",
+                  title: "Report & Improve",
+                  desc: "Monthly performance reports show leads in, jobs booked, and revenue recovered. We continuously optimize based on your data.",
+                },
+              ].map((step) => (
+                <div
+                  key={step.week}
+                  className="rounded-xl border border-[color:var(--border)] bg-white/5 p-5"
+                >
+                  <div className="text-xs font-bold text-[color:var(--accent)] tracking-[.12em] uppercase mb-1">
+                    {step.week}
+                  </div>
+                  <h3 className="font-bold text-base mb-2">{step.title}</h3>
+                  <p className="text-[color:var(--muted)] text-sm leading-relaxed">
+                    {step.desc}
                   </p>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── WHO IT'S FOR ─────────────────────────────────────────── */}
+        <section id="who">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-8 md:p-10">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div>
+                <div className="text-xs font-bold tracking-[.14em] uppercase text-[color:var(--muted)] mb-3">
+                  Who It Is For
+                </div>
+                <h2 className="text-[clamp(22px,3.2vw,34px)] font-extrabold leading-tight">
+                  Built for owner-led HVAC companies that are growing fast and
+                  losing jobs to slow process
+                </h2>
+                <p className="mt-4 text-[color:var(--muted)]">
+                  You are not too small and you are not too big. You have a
+                  solid team, real revenue, and real demand. The problem is not
+                  marketing — it is that your lead-to-booking process has gaps
+                  your team does not have time to fix manually.
+                </p>
+                <CalendlyButton className="cursor-pointer mt-6 inline-flex items-center gap-2 rounded-xl px-5 py-3 font-bold bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001] hover:opacity-90 transition-opacity">
+                  See If You Qualify →
+                </CalendlyButton>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="font-bold text-sm text-[color:var(--muted)] uppercase tracking-widest">
+                  Good fit if you…
+                </h3>
+                {[
+                  "Run 5–20 technicians on residential service, installs, or both",
+                  "Are doing at least $500k per year in revenue",
+                  "Miss calls during busy seasons, lunch hours, or after hours",
+                  "Send estimates but follow-up is inconsistent or manual",
+                  "Have leads from multiple sources with no unified tracking",
+                  "Want more booked jobs without hiring another dispatcher or admin",
+                ].map((pt) => (
+                  <div
+                    key={pt}
+                    className="flex items-start gap-3 rounded-xl border border-[color:var(--border)] bg-white/5 px-4 py-3"
+                  >
+                    <span className="text-[color:var(--accent-2)] font-bold mt-0.5">
+                      ✓
+                    </span>
+                    <span className="text-sm text-[color:var(--muted)]">
+                      {pt}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
+        </section>
 
-          <footer className="p-6 text-center text-[color:var(--muted)]">
-            © {new Date().getFullYear()} ORBISY. All Rights Reserved.
-          </footer>
-        </div>
+        {/* ── FAQ ──────────────────────────────────────────────────── */}
+        <section id="faq">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-8 md:p-10">
+            <div className="text-xs font-bold tracking-[.14em] uppercase text-[color:var(--muted)] mb-3">
+              FAQ
+            </div>
+            <h2 className="text-[clamp(22px,3.2vw,34px)] font-extrabold leading-tight mb-8">
+              Common questions
+            </h2>
+
+            <div className="space-y-3 max-w-[800px]">
+              {faqItems.map((item, i) => (
+                <div
+                  key={i}
+                  className="rounded-xl border border-[color:var(--border)] bg-white/5 overflow-hidden"
+                >
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between px-5 py-4 text-left font-semibold hover:bg-white/5 transition-colors"
+                  >
+                    <span>{item.q}</span>
+                    <span
+                      className={`text-[color:var(--accent)] text-lg transition-transform duration-200 ${openFaq === i ? "rotate-45" : ""}`}
+                    >
+                      +
+                    </span>
+                  </button>
+                  {openFaq === i && (
+                    <div className="px-5 pb-5 text-[color:var(--muted)] text-sm leading-relaxed border-t border-[color:var(--border)]">
+                      <p className="pt-4">{item.a}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CTA / CONTACT ────────────────────────────────────────── */}
+        <section id="audit">
+          <div className="rounded-2xl border border-[color:var(--border)] bg-[color:var(--panel)] p-8 md:p-10">
+            <div className="grid md:grid-cols-2 gap-8">
+              <div>
+                <div className="text-xs font-bold tracking-[.14em] uppercase text-[color:var(--muted)] mb-3">
+                  Free Revenue Audit
+                </div>
+                <h2 className="text-[clamp(22px,3.2vw,34px)] font-extrabold leading-tight">
+                  Book a Free HVAC Revenue Audit
+                </h2>
+                <p className="mt-4 text-[color:var(--muted)]">
+                  We review your current lead flow — calls, forms, estimates,
+                  follow-up — and show you exactly where booked jobs are
+                  leaking. You get a clear action plan whether you work with us
+                  or not.
+                </p>
+
+                <div className="mt-6 space-y-3">
+                  {[
+                    "30-minute call with an HVAC growth specialist",
+                    "Audit of your current lead capture and follow-up process",
+                    "Estimate of revenue being lost each month",
+                    "Specific action plan to recover booked jobs immediately",
+                  ].map((pt) => (
+                    <div
+                      key={pt}
+                      className="flex items-start gap-2 text-sm text-[color:var(--muted)]"
+                    >
+                      <span className="text-[color:var(--accent-2)] mt-0.5">
+                        ✓
+                      </span>
+                      {pt}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 rounded-xl border border-[color:var(--border)] bg-white/5 p-4">
+                  <p className="font-bold text-sm">Our guarantee</p>
+                  <p className="mt-1 text-[color:var(--muted)] text-sm">
+                    If you do not see a measurable increase in booked jobs
+                    within 60 days, we work for free until you do.
+                  </p>
+                </div>
+
+                <div className="mt-4 rounded-xl border border-[color:var(--border)] bg-white/5 p-4">
+                  <p className="font-bold text-sm">Prefer email or phone?</p>
+                  <p className="mt-2 text-sm">
+                    <a
+                      className="text-[color:var(--accent)]"
+                      href="mailto:info@orbisy.com"
+                    >
+                      info@orbisy.com
+                    </a>
+                    <span className="text-[color:var(--muted)]">
+                      {" "}
+                      · (224) 323-6231
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-[color:var(--border)] bg-white/[0.03] p-6">
+                <h3 className="text-lg font-bold mb-4">
+                  Request your free audit
+                </h3>
+                <form className="grid gap-4" onSubmit={onSubmit}>
+                  {/* honeypot */}
+                  <input
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    className="hidden"
+                    aria-hidden="true"
+                  />
+
+                  <label className="grid gap-1">
+                    <span className="text-sm text-[color:var(--muted)]">
+                      Business name
+                    </span>
+                    <input
+                      name="businessName"
+                      className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] px-3 py-2.5 outline-none focus:ring-2 focus:ring-white/20 text-sm"
+                      placeholder="Acme Heating & Cooling"
+                    />
+                  </label>
+
+                  <label className="grid gap-1">
+                    <span className="text-sm text-[color:var(--muted)]">
+                      Email address
+                    </span>
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] px-3 py-2.5 outline-none focus:ring-2 focus:ring-white/20 text-sm"
+                      placeholder="owner@acmehvac.com"
+                    />
+                  </label>
+
+                  <label className="grid gap-1">
+                    <span className="text-sm text-[color:var(--muted)]">
+                      How do leads currently come in? What happens when a call
+                      is missed?
+                    </span>
+                    <textarea
+                      name="message"
+                      required
+                      className="min-h-[100px] rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] px-3 py-2.5 outline-none focus:ring-2 focus:ring-white/20 text-sm"
+                      placeholder="Calls come in during the day, some go to voicemail after hours. We send estimates but don't always follow up…"
+                    />
+                  </label>
+
+                  <button
+                    className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 font-bold border border-transparent bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001] disabled:opacity-60 hover:opacity-90 transition-opacity"
+                    type="submit"
+                    disabled={sending}
+                  >
+                    {sending ? "Sending…" : "Book My Free HVAC Revenue Audit"}{" "}
+                    <span aria-hidden>→</span>
+                  </button>
+
+                  {status === "ok" && (
+                    <p className="text-sm text-[color:var(--accent-2)]">
+                      Sent! You will hear back within one business day.
+                    </p>
+                  )}
+                  {status === "error" && (
+                    <p className="text-sm text-red-300">
+                      Something went wrong. Try again or email us directly.
+                    </p>
+                  )}
+                </form>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
+
+      {/* ── FOOTER ───────────────────────────────────────────────────── */}
+      <footer className="mx-auto max-w-[1100px] px-5 pb-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[color:var(--muted)] border-t border-[color:var(--border)] pt-8 mt-4">
+        <div className="flex items-center gap-3">
+          <Image
+            src="/orbisy-logo.png"
+            alt="ORBISY"
+            width={100}
+            height={32}
+            className="h-7 w-auto opacity-70"
+          />
+          <span>© {new Date().getFullYear()} ORBISY. All rights reserved.</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <a
+            href="mailto:info@orbisy.com"
+            className="hover:text-[color:var(--text)] transition-colors"
+          >
+            info@orbisy.com
+          </a>
+          <a
+            href="/login"
+            className="hover:text-[color:var(--text)] transition-colors"
+          >
+            Login
+          </a>
+        </div>
+      </footer>
     </div>
   );
 }
