@@ -51,6 +51,9 @@ export default function ConsoleClientLayout({
           <NavLink href="/console/inbox" icon="📥">
             Inbox
           </NavLink>
+          <NavLink href="/console/pipeline" icon="🧠">
+            Sales Pipeline
+          </NavLink>
           <NavLink href="/console/users" icon="👤">
             Users
           </NavLink>

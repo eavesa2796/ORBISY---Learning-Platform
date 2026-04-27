@@ -241,3 +241,176 @@ model OutreachUnsubscribe {
 
   @@index([email])
 }
+
+// ==================== SALES MACHINE (INTERNAL) ====================
+
+enum SalesSourceType {
+  GOOGLE_PLACES
+  CSV_IMPORT
+  MANUAL
+  OTHER
+}
+
+enum SalesOutreachStatus {
+  DRAFT
+  READY
+  APPROVED
+  SENT
+  REPLIED
+  BOUNCED
+  STOPPED
+}
+
+model SalesCompany {
+  id                  String             @id @default(cuid())
+  slug                String             @unique
+  name                String
+  website             String?
+  phone               String?
+  city                String?
+  state               String?
+  country             String             @default("US")
+  placeId             String?            @unique
+  category            String?
+  rating              Float?
+  reviewCount         Int?
+  sourceType          SalesSourceType    @default(OTHER)
+  sourceRef           String?
+  discoveredAt        DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  isQualified         Boolean            @default(false)
+  disqualifiedReason  String?
+  contacts            SalesContact[]
+  audits              SalesWebsiteAudit[]
+  scores              SalesLeadScore[]
+  outreachMessages    SalesOutreachMessage[]
+
+  @@index([slug])
+  @@index([name])
+  @@index([city, state])
+  @@index([isQualified])
+  @@index([discoveredAt])
+}
+
+model SalesContact {
+  id          String       @id @default(cuid())
+  companyId   String
+  fullName    String?
+  role        String?
+  email       String?
+  phone       String?
+  isPrimary   Boolean      @default(false)
+  source      String?
+  confidence  Int          @default(50)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  company     SalesCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  messages    SalesOutreachMessage[]
+
+  @@index([companyId])
+  @@index([email])
+}
+
+model SalesWebsiteAudit {
+  id                           String       @id @default(cuid())
+  companyId                    String
+  hasOnlineBooking             Boolean      @default(false)
+  hasEmergencyCta              Boolean      @default(false)
+  hasMissedCallTextBack        Boolean      @default(false)
+  hasFastResponsePromise       Boolean      @default(false)
+  hasFinancingCta              Boolean      @default(false)
+  hasAfterHoursCapture         Boolean      @default(false)
+  hasChatOrTextOption          Boolean      @default(false)
+  hasStrongReviewProcess       Boolean      @default(false)
+  hasClearEstimateFlow         Boolean      @default(false)
+  mobilePerformanceScore       Int?
+  notes                        String?      @db.Text
+  createdAt                    DateTime     @default(now())
+  company                      SalesCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([createdAt])
+}
+
+model SalesLeadScore {
+  id                String               @id @default(cuid())
+  companyId         String
+  icpFit            Int
+  revenuePotential  Int
+  painSignals       Int
+  contactability    Int
+  disqualifiers     Int
+  totalScore        Int
+  explanation       String               @db.Text
+  modelVersion      String               @default("v1")
+  createdAt         DateTime             @default(now())
+  company           SalesCompany         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  evidence          SalesScoreEvidence[]
+
+  @@index([companyId])
+  @@index([totalScore])
+  @@index([createdAt])
+}
+
+model SalesScoreEvidence {
+  id          String         @id @default(cuid())
+  scoreId     String
+  code        String
+  label       String
+  points      Int
+  detail      String?
+  createdAt   DateTime       @default(now())
+  score       SalesLeadScore @relation(fields: [scoreId], references: [id], onDelete: Cascade)
+
+  @@index([scoreId])
+  @@index([code])
+}
+
+model SalesKnowledgeDocument {
+  id          String               @id @default(cuid())
+  title       String
+  sourceType  String               @default("internal")
+  text        String               @db.Text
+  tags        String[]             @default([])
+  isActive    Boolean              @default(true)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  chunks      SalesKnowledgeChunk[]
+
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+model SalesKnowledgeChunk {
+  id            String                 @id @default(cuid())
+  documentId    String
+  chunkIndex    Int
+  content       String                 @db.Text
+  keywords      String[]               @default([])
+  createdAt     DateTime               @default(now())
+  document      SalesKnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([documentId])
+  @@index([chunkIndex])
+}
+
+model SalesOutreachMessage {
+  id                 String              @id @default(cuid())
+  companyId          String
+  contactId          String?
+  status             SalesOutreachStatus @default(DRAFT)
+  subject            String
+  body               String              @db.Text
+  personalization    Json?
+  retrievedChunkIds  String[]            @default([])
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  sentAt             DateTime?
+  repliedAt          DateTime?
+  company            SalesCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact            SalesContact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  @@index([companyId])
+  @@index([contactId])
+  @@index([status])
+}
