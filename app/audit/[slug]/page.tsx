@@ -35,7 +35,9 @@ type AuditData = {
 async function getAudit(slug: string): Promise<AuditData | null> {
   const baseUrl =
     process.env.NEXT_PUBLIC_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+    (process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
 
   const res = await fetch(`${baseUrl}/api/audit/${slug}`, {
     next: { revalidate: 3600 },
@@ -80,7 +82,9 @@ export default async function AuditPage({
     <div className="min-h-screen bg-[#0a0a0a] text-white font-sans">
       {/* Header */}
       <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between max-w-5xl mx-auto">
-        <span className="text-xl font-bold tracking-tight text-[#FF6B35]">ORBISY</span>
+        <span className="text-xl font-bold tracking-tight text-[#FF6B35]">
+          ORBISY
+        </span>
         <span className="text-sm text-white/50">Free HVAC Revenue Audit</span>
       </header>
 
@@ -96,10 +100,11 @@ export default async function AuditPage({
             HVAC jobs.
           </h1>
           <p className="text-lg text-white/60">
-            We scanned{" "}
-            <strong className="text-white">{company.name}</strong>
+            We scanned <strong className="text-white">{company.name}</strong>
             {location ? ` in ${location}` : ""} and found{" "}
-            <strong className="text-white">{leaks.length} revenue leak{leaks.length !== 1 ? "s" : ""}</strong>{" "}
+            <strong className="text-white">
+              {leaks.length} revenue leak{leaks.length !== 1 ? "s" : ""}
+            </strong>{" "}
             you can plug this week without hiring more staff.
           </p>
           {company.website && (
@@ -134,7 +139,9 @@ export default async function AuditPage({
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold mb-1">{leak.title}</h3>
-                    <p className="text-white/60 text-sm mb-3">{leak.description}</p>
+                    <p className="text-white/60 text-sm mb-3">
+                      {leak.description}
+                    </p>
                     <span className="inline-block rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-3 py-1 font-medium">
                       {leak.impact}
                     </span>
@@ -177,7 +184,8 @@ export default async function AuditPage({
               {company.reviewCount} review{company.reviewCount !== 1 ? "s" : ""}
             </p>
             <p className="mt-3 text-white/60 text-sm">
-              Most HVAC companies with a strong review process reach 4.7+ within 90 days.
+              Most HVAC companies with a strong review process reach 4.7+ within
+              90 days.
             </p>
           </section>
         ) : null}
@@ -191,10 +199,9 @@ export default async function AuditPage({
             Book a free 20-minute call. We'll walk through exactly what we'd
             install, what it costs, and what ROI to expect in 30 days.
           </p>
-          <CalendlyButton
-            label="Book My Free Audit Call"
-            className="inline-block rounded-xl bg-[#FF6B35] px-8 py-4 text-lg font-bold text-white hover:bg-[#e55a24] transition-colors"
-          />
+          <CalendlyButton className="inline-block rounded-xl bg-[#FF6B35] px-8 py-4 text-lg font-bold text-white hover:bg-[#e55a24] transition-colors">
+            Book My Free Audit Call
+          </CalendlyButton>
           <p className="mt-4 text-xs text-white/30">
             No credit card. No obligation. HVAC companies only.
           </p>

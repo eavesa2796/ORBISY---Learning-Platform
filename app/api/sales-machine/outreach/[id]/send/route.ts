@@ -105,12 +105,12 @@ export async function POST(
     if (suppressed) {
       await prisma.salesOutreachMessage.update({
         where: { id },
-        data: { status: "SUPPRESSED" },
+        data: { status: "STOPPED" },
       });
       return NextResponse.json(
         {
           error:
-            "Recipient is on the suppression list. Message marked SUPPRESSED.",
+            "Recipient is on the suppression list. Message marked STOPPED.",
           suppressed: true,
         },
         { status: 422 },

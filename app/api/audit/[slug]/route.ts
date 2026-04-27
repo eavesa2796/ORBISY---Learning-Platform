@@ -10,8 +10,8 @@ export async function GET(
   const { slug } = await params;
 
   try {
-    const company = await prisma.salesCompany.findUnique({
-      where: { slug },
+    const company = await prisma.salesCompany.findFirst({
+      where: { slug: { equals: slug } },
       include: {
         audits: { orderBy: { createdAt: "desc" }, take: 1 },
         scores: {
