@@ -42,7 +42,7 @@ export async function GET(
           impact: "~3-5 lost jobs/month on average",
         });
       }
-      if (!audit.hasInstantBookingOrQuote && !audit.hasOnlineBooking) {
+      if (!audit.hasOnlineBooking) {
         leaks.push({
           title: "No instant booking or quote option",
           description:
