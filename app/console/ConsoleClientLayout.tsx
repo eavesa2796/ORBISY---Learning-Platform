@@ -25,7 +25,6 @@ export default function ConsoleClientLayout({
     <div className="min-h-screen bg-[linear-gradient(180deg,var(--bg),#0a0f1b_40%,#090d17)] text-[color:var(--text)]">
       <ToastContainer />
 
-      {/* Sidebar */}
       <div className="fixed inset-y-0 left-0 w-64 bg-[color:var(--panel)] border-r border-[color:var(--border)]">
         <div className="flex items-center justify-center h-16 border-b border-[color:var(--border)] px-4">
           <Image
@@ -39,30 +38,26 @@ export default function ConsoleClientLayout({
         </div>
 
         <nav className="mt-8 px-4 space-y-2">
-          <NavLink href="/console" icon="📊">
-            Dashboard
-          </NavLink>
-          <NavLink href="/console/leads" icon="👥">
-            Leads
-          </NavLink>
-          <NavLink href="/console/campaigns" icon="📧">
-            Campaigns
-          </NavLink>
-          <NavLink href="/console/inbox" icon="📥">
-            Inbox
+          <NavLink href="/console" icon="📈">
+            Command Center
           </NavLink>
           <NavLink href="/console/pipeline" icon="🧠">
             Sales Pipeline
           </NavLink>
-          <NavLink href="/console/users" icon="👤">
-            Users
+          <NavLink href="/console/leads" icon="🏢">
+            Prospects
+          </NavLink>
+          <NavLink href="/console/campaigns" icon="✍️">
+            Playbooks
+          </NavLink>
+          <NavLink href="/console/inbox" icon="📬">
+            Replies
           </NavLink>
           <NavLink href="/console/settings" icon="⚙️">
-            Settings
+            System
           </NavLink>
         </nav>
 
-        {/* Logout button */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[color:var(--border)]">
           <button
             onClick={handleLogout}
@@ -74,7 +69,6 @@ export default function ConsoleClientLayout({
         </div>
       </div>
 
-      {/* Main content */}
       <div className="ml-64">
         <main className="p-8">{children}</main>
       </div>

@@ -1,207 +1,158 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-interface DashboardMetrics {
-  totalLeads: number;
-  activeLeads: number;
-  repliedLeads: number;
-  bookedLeads: number;
-  activeCampaigns: number;
-  totalEnrollments: number;
-  messagesScheduled: number;
-  messagesSentToday: number;
-  repliesThisWeek: number;
-}
+type SummaryResponse = {
+  metrics: {
+    totalCompanies: number;
+    qualifiedCompanies: number;
+    totalMessages: number;
+    repliedMessages: number;
+    readyMessages: number;
+    byStatus: Record<string, number>;
+  };
+};
+
+type RankedLead = {
+  companyId: string;
+  companyName: string;
+  score: number;
+  qualified: boolean;
+};
 
 export default function ConsolePage() {
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<SummaryResponse["metrics"] | null>(
+    null,
+  );
+  const [topLeads, setTopLeads] = useState<RankedLead[]>([]);
 
   useEffect(() => {
-    fetchMetrics();
+    fetchData();
   }, []);
 
-  async function fetchMetrics() {
+  async function fetchData() {
     try {
-      const res = await fetch("/api/outreach/metrics/dashboard");
-      if (res.ok) {
-        const data = await res.json();
-        setMetrics(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch metrics:", error);
+      setLoading(true);
+      const [summaryRes, leadsRes] = await Promise.all([
+        fetch("/api/sales-machine/outreach/summary"),
+        fetch("/api/sales-machine/leads/ranked?minScore=0&limit=8"),
+      ]);
+
+      const summaryJson = await summaryRes.json();
+      const leadsJson = await leadsRes.json();
+
+      if (summaryRes.ok) setSummary(summaryJson.metrics);
+      if (leadsRes.ok) setTopLeads(leadsJson.leads || []);
     } finally {
       setLoading(false);
     }
   }
 
+  const conversion = useMemo(() => {
+    if (!summary || summary.totalMessages === 0) return 0;
+    return Math.round((summary.readyMessages / summary.totalMessages) * 100);
+  }, [summary]);
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-[color:var(--muted)]">Loading...</div>
-      </div>
+      <p className="text-[color:var(--muted)]">Loading command center...</p>
     );
   }
 
-  const stats = metrics || {
-    totalLeads: 0,
-    activeLeads: 0,
-    repliedLeads: 0,
-    bookedLeads: 0,
-    activeCampaigns: 0,
-    totalEnrollments: 0,
-    messagesScheduled: 0,
-    messagesSentToday: 0,
-    repliesThisWeek: 0,
-  };
-
   return (
-    <div>
-      <h1 className="text-3xl font-bold text-[color:var(--text)] mb-8">
-        Dashboard
-      </h1>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard
-          title="Total Leads"
-          value={stats.totalLeads}
-          icon="👥"
-          color="blue"
-        />
-        <StatCard
-          title="Active Leads"
-          value={stats.activeLeads}
-          icon="✨"
-          color="green"
-        />
-        <StatCard
-          title="Replied Leads"
-          value={stats.repliedLeads}
-          icon="💬"
-          color="purple"
-        />
-        <StatCard
-          title="Booked Jobs"
-          value={stats.bookedLeads}
-          icon="📅"
-          color="orange"
-        />
-        <StatCard
-          title="Active Campaigns"
-          value={stats.activeCampaigns}
-          icon="📧"
-          color="indigo"
-        />
-        <StatCard
-          title="Active Enrollments"
-          value={stats.totalEnrollments}
-          icon="🎯"
-          color="pink"
-        />
-        <StatCard
-          title="Messages Scheduled"
-          value={stats.messagesScheduled}
-          icon="⏰"
-          color="yellow"
-        />
-        <StatCard
-          title="Sent Today"
-          value={stats.messagesSentToday}
-          icon="📨"
-          color="teal"
-        />
-        <StatCard
-          title="Replies This Week"
-          value={stats.repliesThisWeek}
-          icon="📥"
-          color="cyan"
-        />
+    <div className="space-y-8">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-[color:var(--text)]">
+            Command Center
+          </h1>
+          <p className="text-[color:var(--muted)] mt-2">
+            One-screen operating view for lead generation, outreach, and booked
+            calls.
+          </p>
+        </div>
+        <a
+          href="/console/pipeline"
+          className="rounded-xl border border-transparent bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] px-5 py-3 font-semibold text-[#001] hover:opacity-90"
+        >
+          Open Pipeline
+        </a>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-[color:var(--panel)] border border-[color:var(--border)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6">
-        <h2 className="text-xl font-semibold text-[color:var(--text)] mb-4">
-          Quick Actions
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+        <MetricCard title="Prospects" value={summary?.totalCompanies ?? 0} />
+        <MetricCard
+          title="Qualified"
+          value={summary?.qualifiedCompanies ?? 0}
+        />
+        <MetricCard title="Outreach Sent" value={summary?.totalMessages ?? 0} />
+        <MetricCard title="Replies" value={summary?.repliedMessages ?? 0} />
+        <MetricCard title="Ready" value={summary?.readyMessages ?? 0} />
+      </div>
+
+      <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] p-6">
+        <h2 className="text-xl font-semibold text-[color:var(--text)]">
+          Current funnel efficiency
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <QuickActionButton href="/console/leads" icon="➕">
-            Add Lead
-          </QuickActionButton>
-          <QuickActionButton href="/console/campaigns" icon="🚀">
-            Create Campaign
-          </QuickActionButton>
-          <QuickActionButton href="/console/leads?import=true" icon="📥">
-            Import CSV
-          </QuickActionButton>
-          <QuickActionButton href="/console/inbox" icon="📬">
-            View Inbox
-          </QuickActionButton>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({
-  title,
-  value,
-  icon,
-  color,
-}: {
-  title: string;
-  value: number;
-  icon: string;
-  color: string;
-}) {
-  const colorClasses: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-600",
-    green: "bg-green-50 text-green-600",
-    purple: "bg-purple-50 text-purple-600",
-    orange: "bg-orange-50 text-orange-600",
-    indigo: "bg-indigo-50 text-indigo-600",
-    pink: "bg-pink-50 text-pink-600",
-    yellow: "bg-yellow-50 text-yellow-600",
-    teal: "bg-teal-50 text-teal-600",
-    cyan: "bg-cyan-50 text-cyan-600",
-  };
-
-  return (
-    <div className="bg-[color:var(--panel)] border border-[color:var(--border)] rounded-[var(--radius)] shadow-[var(--shadow)] p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="p-3 rounded-xl bg-[linear-gradient(135deg,var(--accent),var(--accent-2))] text-[#001]">
-          <span className="text-2xl">{icon}</span>
-        </div>
-      </div>
-      <div>
-        <p className="text-3xl font-bold text-[color:var(--text)]">
-          {value.toLocaleString()}
+        <p className="text-[color:var(--muted)] mt-2">
+          Booked rate from total outreach:{" "}
+          <span className="text-[color:var(--accent)] font-bold">
+            {conversion}%
+          </span>
+          Ready rate from total outreach:{" "}
+          <span className="text-[color:var(--accent)] font-bold">
+            {conversion}%
+          </span>
         </p>
-        <p className="text-sm text-[color:var(--muted)] mt-1">{title}</p>
+        <p className="text-sm text-[color:var(--muted)] mt-2">
+          Focus target: push reply rate and booking rate with better
+          personalization + tighter follow-up.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] p-6">
+        <h2 className="text-xl font-semibold text-[color:var(--text)] mb-4">
+          Top scored prospects
+        </h2>
+        {topLeads.length === 0 ? (
+          <p className="text-[color:var(--muted)]">
+            No prospects imported yet.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {topLeads.map((lead) => (
+              <div
+                key={lead.companyId}
+                className="flex items-center justify-between rounded-lg border border-[color:var(--border)] bg-white/5 px-4 py-3"
+              >
+                <div>
+                  <p className="font-semibold text-[color:var(--text)]">
+                    {lead.companyName}
+                  </p>
+                  <p className="text-xs text-[color:var(--muted)]">
+                    {lead.qualified ? "Qualified" : "Needs review"}
+                  </p>
+                </div>
+                <p className="font-bold text-[color:var(--accent)]">
+                  {lead.score}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function QuickActionButton({
-  href,
-  icon,
-  children,
-}: {
-  href: string;
-  icon: string;
-  children: React.ReactNode;
-}) {
+function MetricCard({ title, value }: { title: string; value: number }) {
   return (
-    <a
-      href={href}
-      className="flex items-center px-4 py-3 bg-white/5 hover:bg-white/10 rounded-xl transition-colors border border-[color:var(--border)]"
-    >
-      <span className="text-xl mr-3">{icon}</span>
-      <span className="text-sm font-medium text-[color:var(--text)]">
-        {children}
-      </span>
-    </a>
+    <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] p-5">
+      <p className="text-sm text-[color:var(--muted)]">{title}</p>
+      <p className="text-3xl font-bold text-[color:var(--text)] mt-2">
+        {value.toLocaleString()}
+      </p>
+    </div>
   );
 }
