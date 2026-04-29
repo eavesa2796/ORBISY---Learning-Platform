@@ -2,7 +2,6 @@
 
 import { useState, FormEvent, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 
 // Force dynamic rendering to prevent prerendering issues
@@ -118,13 +117,7 @@ function LoginForm() {
 
           <div className="mt-6 text-center space-y-3">
             <p className="text-sm text-[color:var(--muted)]">
-              Don't have an account?{" "}
-              <Link
-                href="/signup"
-                className="text-[color:var(--accent)] hover:text-[color:var(--accent-2)] font-semibold transition"
-              >
-                Create one
-              </Link>
+              Account creation is currently invite-only.
             </p>
             <a
               href="/"
