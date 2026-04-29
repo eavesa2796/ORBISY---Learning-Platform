@@ -9,8 +9,11 @@ type Lead = {
   city?: string;
   state?: string;
   score: number;
+  buyingLikelihood: number;
   qualified: boolean;
   explanation: string;
+  dealThesis?: string;
+  thesisConfidence: number;
 };
 
 export default function ProspectsPage() {
@@ -89,7 +92,7 @@ export default function ProspectsPage() {
                       "Unknown location"}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right flex-shrink-0">
                   <p className="text-2xl font-bold text-[color:var(--accent)]">
                     {lead.score}
                   </p>
@@ -99,9 +102,32 @@ export default function ProspectsPage() {
                 </div>
               </div>
 
-              <p className="text-sm text-[color:var(--muted)] mt-3">
-                {lead.explanation}
-              </p>
+              {/* Buying likelihood bar */}
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs text-[color:var(--muted)] mb-1">
+                  <span>Buying likelihood</span>
+                  <span className="font-semibold text-[color:var(--accent-2)]">
+                    {lead.buyingLikelihood}/100
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-[color:var(--accent-2)]"
+                    style={{ width: `${lead.buyingLikelihood}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Deal thesis */}
+              {lead.dealThesis && lead.thesisConfidence > 0 ? (
+                <p className="mt-3 text-sm text-[color:var(--muted)] italic border-l-2 border-[color:var(--accent)]/40 pl-3">
+                  {lead.dealThesis}
+                </p>
+              ) : (
+                <p className="mt-3 text-xs text-[color:var(--muted)]/60 italic">
+                  No deal thesis yet — run a website audit to generate one.
+                </p>
+              )}
 
               {lead.slug ? (
                 <a

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { scoreLead, type ScoringInput } from "@/lib/sales/scoring";
+import {
+  scoreLead,
+  type ScoringInput,
+  type ScoringSignals,
+} from "@/lib/sales/scoring";
 
 export const runtime = "nodejs";
 
@@ -43,7 +47,7 @@ type IncomingLead = {
     phone?: string;
     isPrimary?: boolean;
   };
-  signals?: Partial<ScoringInput>;
+  signals?: ScoringSignals;
   auditNotes?: string;
   mobilePerformanceScore?: number;
 };
@@ -65,21 +69,11 @@ function defaultScoringInput(lead: IncomingLead): ScoringInput {
     isLocalRegional: true,
     isHugeFranchise: false,
     reviewCount: lead.reviewCount || 0,
-    hasEmergencyService: false,
-    hasFinancingServices: false,
-    hasMultipleServiceAreas: false,
-    hasAdsOrStrongSeo: false,
-    hasMissedCallTextBack: false,
-    hasInstantBookingOrQuote: false,
-    hasPoorMobileUx: false,
-    hasWeakEstimateFollowUpSignals: false,
-    hasCommsComplaintsInReviews: false,
-    hasSlowOrConfusingForms: false,
-    hasPublicEmailOrForm: true,
-    hasOwnerOrManagerContact: !!lead.contact?.fullName,
     hasPhoneNumber: !!lead.phone,
+    hasWebsite: !!lead.website,
     hasActiveBusinessProfile: true,
-    usesAdvancedAutomationAlready: false,
+    // Pass evidenced signals directly from the lead payload
+    signals: lead.signals,
   };
 }
 
@@ -188,28 +182,34 @@ export async function POST(request: NextRequest) {
             companyId: company.id,
             notes: lead.auditNotes,
             mobilePerformanceScore: lead.mobilePerformanceScore,
-            hasMissedCallTextBack: lead.signals?.hasMissedCallTextBack ?? false,
-            hasOnlineBooking: lead.signals?.hasInstantBookingOrQuote ?? false,
-            hasEmergencyCta: lead.signals?.hasEmergencyService ?? false,
-            hasFastResponsePromise: !(
-              lead.signals?.hasSlowOrConfusingForms ?? false
-            ),
-            hasFinancingCta: lead.signals?.hasFinancingServices ?? false,
-            hasAfterHoursCapture: lead.signals?.hasEmergencyService ?? false,
-            hasChatOrTextOption: lead.signals?.hasMissedCallTextBack ?? false,
+            hasOnlineBooking:
+              lead.signals?.hasOnlineBookingFlow?.observed ?? false,
+            hasEmergencyCta:
+              lead.signals?.hasEmergencyService?.observed ?? false,
+            hasMissedCallTextBack:
+              lead.signals?.hasMissedCallTextBack?.observed ?? false,
+            hasFastResponsePromise:
+              lead.signals?.hasFastResponsePromise?.observed ?? false,
+            hasFinancingCta:
+              lead.signals?.hasFinancingServices?.observed ?? false,
+            hasAfterHoursCapture:
+              lead.signals?.hasAfterHoursCapture?.observed ?? false,
+            hasChatOrTextOption:
+              lead.signals?.hasChatOrTextOption?.observed ?? false,
             hasStrongReviewProcess: !(
-              lead.signals?.hasCommsComplaintsInReviews ?? false
+              lead.signals?.hasCommsComplaintsInReviews?.observed ?? false
             ),
-            hasClearEstimateFlow: !(
-              lead.signals?.hasWeakEstimateFollowUpSignals ?? false
-            ),
+            hasClearEstimateFlow:
+              lead.signals?.hasClearEstimateFlow?.observed ?? false,
           },
         });
 
         const scoringInput: ScoringInput = {
           ...defaultScoringInput(lead),
-          ...(lead.signals || {}),
-          reviewCount: lead.reviewCount || lead.signals?.reviewCount || 0,
+          reviewCount:
+            lead.reviewCount || lead.signals?.detectedTools
+              ? lead.reviewCount || 0
+              : lead.reviewCount || 0,
         };
 
         const score = scoreLead(scoringInput);
@@ -223,6 +223,9 @@ export async function POST(request: NextRequest) {
             contactability: score.contactability,
             disqualifiers: score.disqualifiers,
             totalScore: score.totalScore,
+            buyingLikelihood: score.buyingLikelihood,
+            dealThesis: score.dealThesis,
+            thesisConfidence: score.thesisConfidence,
             explanation: score.explanation,
           },
         });

@@ -325,11 +325,36 @@ model SalesWebsiteAudit {
   hasClearEstimateFlow         Boolean      @default(false)
   mobilePerformanceScore       Int?
   notes                        String?      @db.Text
+  auditVersion                 String       @default("v1")
+  auditedUrl                   String?
+  crawlStatus                  String       @default("pending")
+  crawlError                   String?
+  auditedAt                    DateTime?
+  detectedTools                String[]     @default([])
   createdAt                    DateTime     @default(now())
   company                      SalesCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  evidence                     SalesAuditEvidence[]
 
   @@index([companyId])
   @@index([createdAt])
+}
+
+model SalesAuditEvidence {
+  id            String            @id @default(cuid())
+  auditId       String
+  code          String
+  label         String
+  observed      Boolean
+  severity      String            @default("medium")
+  confidence    Int               @default(80)
+  sourceUrl     String?
+  snippet       String?           @db.Text
+  screenshotUrl String?
+  createdAt     DateTime          @default(now())
+  audit         SalesWebsiteAudit @relation(fields: [auditId], references: [id], onDelete: Cascade)
+
+  @@index([auditId])
+  @@index([code])
 }
 
 model SalesLeadScore {
@@ -342,6 +367,9 @@ model SalesLeadScore {
   disqualifiers     Int
   totalScore        Int
   explanation       String               @db.Text
+  buyingLikelihood  Int                  @default(0)
+  dealThesis        String?              @db.Text
+  thesisConfidence  Int                  @default(0)
   modelVersion      String               @default("v1")
   createdAt         DateTime             @default(now())
   company           SalesCompany         @relation(fields: [companyId], references: [id], onDelete: Cascade)
@@ -349,6 +377,7 @@ model SalesLeadScore {
 
   @@index([companyId])
   @@index([totalScore])
+  @@index([buyingLikelihood])
   @@index([createdAt])
 }
 
@@ -407,6 +436,8 @@ model SalesOutreachMessage {
   updatedAt          DateTime            @updatedAt
   sentAt             DateTime?
   repliedAt          DateTime?
+  bounceType         String?
+  bounceReason       String?
   company            SalesCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   contact            SalesContact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
 

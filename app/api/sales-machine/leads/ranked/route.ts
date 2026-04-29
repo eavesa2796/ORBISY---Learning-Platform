@@ -52,8 +52,11 @@ export async function GET(request: NextRequest) {
         city: row.company.city,
         state: row.company.state,
         score: row.totalScore,
+        buyingLikelihood: row.buyingLikelihood,
         qualified: row.company.isQualified,
         explanation: row.explanation,
+        dealThesis: row.dealThesis ?? undefined,
+        thesisConfidence: row.thesisConfidence,
         scoreBreakdown: {
           icpFit: row.icpFit,
           revenuePotential: row.revenuePotential,

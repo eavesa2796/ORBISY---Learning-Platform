@@ -216,30 +216,19 @@ export async function POST(request: NextRequest) {
               },
             });
 
-        // Score the lead
+        // Score the lead — behavioral signals require a website crawl
+        // Run /api/sales-machine/audit/run after import to populate them
         const scoringInput: ScoringInput = {
           isHvacOnly: isHvacCategory(types),
           isResidentialService: true,
           isLocalRegional: true,
           isHugeFranchise: false,
           reviewCount: candidate.user_ratings_total ?? 0,
-          hasEmergencyService: false,
-          hasFinancingServices: false,
-          hasMultipleServiceAreas: false,
-          hasAdsOrStrongSeo: false,
-          hasMissedCallTextBack: false,
-          hasInstantBookingOrQuote: false,
-          hasPoorMobileUx: !detail?.website,
-          hasWeakEstimateFollowUpSignals: true,
-          hasCommsComplaintsInReviews: false,
-          hasSlowOrConfusingForms: !detail?.website,
-          hasPublicEmailOrForm: !!detail?.website,
-          hasOwnerOrManagerContact: false,
           hasPhoneNumber: !!(
             detail?.formatted_phone_number || detail?.international_phone_number
           ),
+          hasWebsite: !!detail?.website,
           hasActiveBusinessProfile: true,
-          usesAdvancedAutomationAlready: false,
         };
 
         const score = scoreLead(scoringInput);
@@ -253,6 +242,9 @@ export async function POST(request: NextRequest) {
             contactability: score.contactability,
             disqualifiers: score.disqualifiers,
             totalScore: score.totalScore,
+            buyingLikelihood: score.buyingLikelihood,
+            dealThesis: score.dealThesis,
+            thesisConfidence: score.thesisConfidence,
             explanation: score.explanation,
             evidence: {
               create: score.evidence.map((ev) => ({
