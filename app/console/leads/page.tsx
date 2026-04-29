@@ -16,10 +16,19 @@ type Lead = {
   thesisConfidence: number;
 };
 
+type AuditState =
+  | { status: "idle" }
+  | { status: "running" }
+  | { status: "done"; delta: number | null; buyingLikelihood: number }
+  | { status: "error"; message: string };
+
 export default function ProspectsPage() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [minScore, setMinScore] = useState(60);
   const [loading, setLoading] = useState(true);
+  const [auditStates, setAuditStates] = useState<Record<string, AuditState>>(
+    {},
+  );
 
   useEffect(() => {
     fetchLeads();
@@ -35,6 +44,37 @@ export default function ProspectsPage() {
       if (res.ok) setLeads(data.leads || []);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function runAudit(companyId: string) {
+    setAuditStates((prev) => ({ ...prev, [companyId]: { status: "running" } }));
+    try {
+      const res = await fetch("/api/sales-machine/audit/run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Audit failed");
+      setAuditStates((prev) => ({
+        ...prev,
+        [companyId]: {
+          status: "done",
+          delta: data.score?.delta ?? null,
+          buyingLikelihood: data.score?.buyingLikelihood ?? 0,
+        },
+      }));
+      // Refresh list so thesis + score update in the card
+      await fetchLeads();
+    } catch (err) {
+      setAuditStates((prev) => ({
+        ...prev,
+        [companyId]: {
+          status: "error",
+          message: err instanceof Error ? err.message : "Unknown error",
+        },
+      }));
     }
   }
 
@@ -129,16 +169,58 @@ export default function ProspectsPage() {
                 </p>
               )}
 
-              {lead.slug ? (
-                <a
-                  href={`/audit/${lead.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block mt-3 text-sm text-[color:var(--accent)] underline"
-                >
-                  Open Public Audit
-                </a>
-              ) : null}
+              {/* Audit actions */}
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                {(() => {
+                  const state = auditStates[lead.companyId] ?? {
+                    status: "idle",
+                  };
+                  return (
+                    <>
+                      <button
+                        onClick={() => runAudit(lead.companyId)}
+                        disabled={state.status === "running"}
+                        className="rounded-lg border border-[color:var(--border)] bg-white/5 px-4 py-2 text-sm font-medium text-[color:var(--text)] hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {state.status === "running" ? "Auditing…" : "Run Audit"}
+                      </button>
+                      {state.status === "done" && (
+                        <span className="text-sm text-[color:var(--accent-2)]">
+                          ✓ Done
+                          {state.delta !== null && state.delta !== 0 && (
+                            <span
+                              className={
+                                state.delta > 0
+                                  ? "text-green-400"
+                                  : "text-red-400"
+                              }
+                            >
+                              {" "}
+                              ({state.delta > 0 ? "+" : ""}
+                              {state.delta} pts)
+                            </span>
+                          )}
+                        </span>
+                      )}
+                      {state.status === "error" && (
+                        <span className="text-sm text-red-400">
+                          ✗ {state.message}
+                        </span>
+                      )}
+                    </>
+                  );
+                })()}
+                {lead.slug ? (
+                  <a
+                    href={`/audit/${lead.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-[color:var(--accent)] underline"
+                  >
+                    Open Public Audit
+                  </a>
+                ) : null}
+              </div>
             </div>
           ))}
         </div>
