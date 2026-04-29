@@ -4,7 +4,11 @@ import { scoreLead, type ScoringInput } from "@/lib/sales/scoring";
 
 export const runtime = "nodejs";
 
-const PLACES_API_BASE = "https://maps.googleapis.com/maps/api/place";
+const PLACES_NEW_BASE = "https://places.googleapis.com/v1";
+const DEFAULT_SEARCH_FIELD_MASK =
+  "places.id,places.name,places.displayName,places.formattedAddress,places.types,places.rating,places.userRatingCount";
+const DEFAULT_DETAILS_FIELD_MASK =
+  "id,name,displayName,formattedAddress,nationalPhoneNumber,internationalPhoneNumber,websiteUri,types,rating,userRatingCount";
 
 function toSlug(name: string, city?: string | null): string {
   return [name, city]
@@ -27,29 +31,22 @@ async function uniqueSlug(base: string): Promise<string> {
   }
 }
 
-type PlaceResult = {
-  place_id: string;
-  name: string;
-  formatted_address?: string;
-  formatted_phone_number?: string;
-  international_phone_number?: string;
-  website?: string;
+type PlacesApiV1Place = {
+  id?: string;
+  name?: string;
+  displayName?: { text?: string };
+  formattedAddress?: string;
+  nationalPhoneNumber?: string;
+  internationalPhoneNumber?: string;
+  websiteUri?: string;
   rating?: number;
-  user_ratings_total?: number;
+  userRatingCount?: number;
   types?: string[];
-  geometry?: { location: { lat: number; lng: number } };
-  vicinity?: string;
 };
 
-type TextSearchResult = {
-  place_id: string;
-  name: string;
-  formatted_address?: string;
-  rating?: number;
-  user_ratings_total?: number;
-  types?: string[];
-  geometry?: { location: { lat: number; lng: number } };
-  vicinity?: string;
+type SearchTextResponse = {
+  places?: PlacesApiV1Place[];
+  error?: { message?: string };
 };
 
 function parseCity(address?: string): string | undefined {
@@ -77,6 +74,59 @@ function isHvacCategory(types?: string[]): boolean {
   );
 }
 
+function placeName(place: PlacesApiV1Place): string {
+  return place.displayName?.text?.trim() || place.name || "Unknown Company";
+}
+
+async function searchPlacesText(
+  apiKey: string,
+  query: string,
+  maxResults: number,
+  searchFieldMask: string,
+): Promise<PlacesApiV1Place[]> {
+  const res = await fetch(`${PLACES_NEW_BASE}/places:searchText`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": searchFieldMask,
+    },
+    body: JSON.stringify({
+      textQuery: query,
+      maxResultCount: maxResults,
+      languageCode: "en",
+      regionCode: "US",
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Places searchText failed (${res.status})`);
+  }
+
+  const data = (await res.json()) as SearchTextResponse;
+  if (data.error?.message) {
+    throw new Error(`Places searchText error: ${data.error.message}`);
+  }
+
+  return data.places ?? [];
+}
+
+async function fetchPlaceDetails(
+  apiKey: string,
+  placeId: string,
+  detailsFieldMask: string,
+): Promise<PlacesApiV1Place | null> {
+  const detailRes = await fetch(`${PLACES_NEW_BASE}/places/${placeId}`, {
+    headers: {
+      "X-Goog-Api-Key": apiKey,
+      "X-Goog-FieldMask": detailsFieldMask,
+    },
+  });
+
+  if (!detailRes.ok) return null;
+  return (await detailRes.json()) as PlacesApiV1Place;
+}
+
 export async function POST(request: NextRequest) {
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
@@ -102,37 +152,19 @@ export async function POST(request: NextRequest) {
 
     const maxResults = Math.min(body.maxResults ?? 20, 60);
     const fetchDetails = body.fetchDetails !== false;
+    const searchFieldMask =
+      process.env.GOOGLE_PLACES_SEARCH_FIELD_MASK || DEFAULT_SEARCH_FIELD_MASK;
+    const detailsFieldMask =
+      process.env.GOOGLE_PLACES_DETAILS_FIELD_MASK ||
+      DEFAULT_DETAILS_FIELD_MASK;
 
-    // Text Search to get a list of places
-    const searchUrl = new URL(`${PLACES_API_BASE}/textsearch/json`);
-    searchUrl.searchParams.set("query", body.query);
-    searchUrl.searchParams.set("key", apiKey);
+    const candidates = await searchPlacesText(
+      apiKey,
+      body.query,
+      maxResults,
+      searchFieldMask,
+    );
 
-    const searchRes = await fetch(searchUrl.toString());
-    if (!searchRes.ok) {
-      return NextResponse.json(
-        { error: "Google Places text search failed", status: searchRes.status },
-        { status: 502 },
-      );
-    }
-
-    const searchData = (await searchRes.json()) as {
-      status: string;
-      results: TextSearchResult[];
-      error_message?: string;
-    };
-
-    if (searchData.status !== "OK" && searchData.status !== "ZERO_RESULTS") {
-      return NextResponse.json(
-        {
-          error: `Google Places API error: ${searchData.status}`,
-          detail: searchData.error_message,
-        },
-        { status: 502 },
-      );
-    }
-
-    const candidates = (searchData.results || []).slice(0, maxResults);
     const imported: Array<{
       companyId: string;
       slug: string;
@@ -144,43 +176,32 @@ export async function POST(request: NextRequest) {
 
     for (const candidate of candidates) {
       try {
-        // Optionally fetch Place Details for phone + website
-        let detail: PlaceResult | null = null;
-        if (fetchDetails) {
-          const detailUrl = new URL(`${PLACES_API_BASE}/details/json`);
-          detailUrl.searchParams.set("place_id", candidate.place_id);
-          detailUrl.searchParams.set(
-            "fields",
-            "place_id,name,formatted_address,formatted_phone_number,website,rating,user_ratings_total,types,geometry,vicinity",
-          );
-          detailUrl.searchParams.set("key", apiKey);
-
-          const detailRes = await fetch(detailUrl.toString());
-          if (detailRes.ok) {
-            const detailData = (await detailRes.json()) as {
-              status: string;
-              result?: PlaceResult;
-            };
-            if (detailData.status === "OK" && detailData.result) {
-              detail = detailData.result;
-            }
-          }
+        const placeId = candidate.id;
+        if (!placeId) {
+          skipped.push(`${placeName(candidate)}: missing place id`);
+          continue;
         }
 
-        const address =
-          detail?.formatted_address || candidate.formatted_address;
+        // Use lightweight search payload first; optionally enrich with details.
+        const detail = fetchDetails
+          ? await fetchPlaceDetails(apiKey, placeId, detailsFieldMask)
+          : null;
+
+        const effective = detail ?? candidate;
+        const companyName = placeName(effective);
+        const address = effective.formattedAddress;
         const city = parseCity(address);
         const state = parseState(address);
-        const types = detail?.types || candidate.types;
+        const types = effective.types;
         const category = types?.[0] ?? "hvac_contractor";
 
-        // Deduplicate by placeId first, then name+city
+        // Deduplicate by durable external key first, then name+location fallback.
         const existing = await prisma.salesCompany.findFirst({
           where: {
             OR: [
-              { placeId: candidate.place_id },
+              { placeId },
               {
-                name: candidate.name,
+                name: companyName,
                 city: city ?? null,
                 state: state ?? null,
               },
@@ -188,18 +209,18 @@ export async function POST(request: NextRequest) {
           },
         });
 
+        // Persist only first-party normalized fields, not raw third-party payloads.
         const companyData = {
-          name: candidate.name,
-          website: detail?.website,
+          name: companyName,
+          website: effective.websiteUri,
           phone:
-            detail?.formatted_phone_number ||
-            detail?.international_phone_number,
+            effective.nationalPhoneNumber || effective.internationalPhoneNumber,
           city,
           state,
-          placeId: candidate.place_id,
+          placeId,
           category,
-          rating: candidate.rating,
-          reviewCount: candidate.user_ratings_total,
+          rating: effective.rating,
+          reviewCount: effective.userRatingCount,
           sourceType: "GOOGLE_PLACES" as const,
           sourceRef: body.query,
         };
@@ -211,23 +232,22 @@ export async function POST(request: NextRequest) {
             })
           : await prisma.salesCompany.create({
               data: {
-                slug: await uniqueSlug(toSlug(candidate.name, city)),
+                slug: await uniqueSlug(toSlug(companyName, city)),
                 ...companyData,
               },
             });
 
-        // Score the lead — behavioral signals require a website crawl
-        // Run /api/sales-machine/audit/run after import to populate them
+        // Behavioral signals require website audit evidence.
         const scoringInput: ScoringInput = {
           isHvacOnly: isHvacCategory(types),
           isResidentialService: true,
           isLocalRegional: true,
           isHugeFranchise: false,
-          reviewCount: candidate.user_ratings_total ?? 0,
+          reviewCount: effective.userRatingCount ?? 0,
           hasPhoneNumber: !!(
-            detail?.formatted_phone_number || detail?.international_phone_number
+            effective.nationalPhoneNumber || effective.internationalPhoneNumber
           ),
-          hasWebsite: !!detail?.website,
+          hasWebsite: !!effective.websiteUri,
           hasActiveBusinessProfile: true,
         };
 
@@ -271,7 +291,7 @@ export async function POST(request: NextRequest) {
         });
       } catch (err) {
         skipped.push(
-          `${candidate.name}: ${err instanceof Error ? err.message : "unknown error"}`,
+          `${placeName(candidate)}: ${err instanceof Error ? err.message : "unknown error"}`,
         );
       }
     }
@@ -282,13 +302,19 @@ export async function POST(request: NextRequest) {
       found: candidates.length,
       imported: imported.length,
       skipped: skipped.length,
+      resultCountRequested: maxResults,
+      fetchDetails,
+      searchFieldMask,
+      detailsFieldMask,
       results: imported,
       errors: skipped,
     });
   } catch (err) {
     console.error("[google-places] error", err);
     return NextResponse.json(
-      { error: "Internal server error" },
+      {
+        error: err instanceof Error ? err.message : "Internal server error",
+      },
       { status: 500 },
     );
   }

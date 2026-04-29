@@ -5,10 +5,18 @@ import CalendlyButton from "@/components/CalendlyButton";
 
 export const runtime = "nodejs";
 
-type Leak = {
+type PriorityIssue = {
+  priority: number;
+  code: string;
   title: string;
-  description: string;
+  proof: {
+    sourceUrl?: string | null;
+    snippet?: string | null;
+    screenshotUrl?: string | null;
+    confidence: number;
+  };
   impact: string;
+  recommendedFix: string;
 };
 
 type AuditData = {
@@ -28,7 +36,12 @@ type AuditData = {
     qualified: boolean;
     explanation: string;
   } | null;
-  leaks: Leak[];
+  audit: {
+    auditedAt?: string | null;
+    auditedUrl?: string | null;
+    crawlStatus: string;
+  } | null;
+  priorityIssues: PriorityIssue[];
   missedRevenue: string;
   generatedAt: string;
 };
@@ -62,7 +75,7 @@ export async function generateMetadata({
 
   return {
     title: `${audit.company.name} — Free HVAC Revenue Audit | ORBISY`,
-    description: `We found ${audit.leaks.length} revenue leak${audit.leaks.length !== 1 ? "s" : ""} at ${audit.company.name} costing an estimated ${audit.missedRevenue} in missed HVAC jobs.`,
+    description: `We found ${audit.priorityIssues.length} priority issue${audit.priorityIssues.length !== 1 ? "s" : ""} at ${audit.company.name} costing an estimated ${audit.missedRevenue} in missed HVAC jobs.`,
   };
 }
 
@@ -76,7 +89,7 @@ export default async function AuditPage({
 
   if (!audit) notFound();
 
-  const { company, leaks, missedRevenue } = audit;
+  const { company, priorityIssues, missedRevenue } = audit;
   const location = [company.city, company.state].filter(Boolean).join(", ");
 
   return (
@@ -115,7 +128,8 @@ export default async function AuditPage({
             <strong className="text-[color:var(--text)]">{company.name}</strong>
             {location ? ` in ${location}` : ""} and found{" "}
             <strong className="text-[color:var(--text)]">
-              {leaks.length} revenue leak{leaks.length !== 1 ? "s" : ""}
+              {priorityIssues.length} priority issue
+              {priorityIssues.length !== 1 ? "s" : ""}
             </strong>{" "}
             you can plug this week without hiring more staff.
           </p>
@@ -134,29 +148,64 @@ export default async function AuditPage({
           )}
         </div>
 
-        {/* Lead Leaks */}
+        {/* Top 3 Priority Issues: issue + proof + impact + fix */}
         <section className="mb-14">
-          <h2 className="text-2xl font-bold mb-6">
-            {leaks.length} Revenue Leaks Found
-          </h2>
+          <h2 className="text-2xl font-bold mb-6">Top 3 Priority Issues</h2>
           <div className="space-y-5">
-            {leaks.map((leak, i) => (
+            {priorityIssues.map((issue) => (
               <div
-                key={i}
+                key={`${issue.code}-${issue.priority}`}
                 className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] p-6"
               >
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[color:var(--accent)]/20 text-[color:var(--accent)] flex items-center justify-center font-bold text-sm">
-                    {i + 1}
+                    {issue.priority}
                   </div>
-                  <div>
-                    <h3 className="text-lg font-semibold mb-1">{leak.title}</h3>
-                    <p className="text-[color:var(--muted)] text-sm mb-3">
-                      {leak.description}
+                  <div className="w-full space-y-3">
+                    <h3 className="text-lg font-semibold">
+                      Issue: {issue.title}
+                    </h3>
+
+                    <div className="rounded-lg border border-[color:var(--border)]/70 bg-black/10 p-3 text-sm">
+                      <p className="text-[color:var(--muted)] mb-2">
+                        <span className="font-semibold text-[color:var(--text)]">
+                          Proof
+                        </span>{" "}
+                        · Confidence {issue.proof.confidence}%
+                      </p>
+                      <p className="text-[color:var(--muted)] mb-2 break-words">
+                        Source:{" "}
+                        {issue.proof.sourceUrl ? (
+                          <a
+                            href={issue.proof.sourceUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="underline hover:text-[color:var(--text)] transition-colors"
+                          >
+                            {issue.proof.sourceUrl.replace(/^https?:\/\//, "")}
+                          </a>
+                        ) : (
+                          "Not available"
+                        )}
+                      </p>
+                      <p className="text-[color:var(--text)]/90 text-sm italic">
+                        "{issue.proof.snippet || "No snippet captured."}"
+                      </p>
+                    </div>
+
+                    <p className="text-sm text-[color:var(--muted)]">
+                      <span className="font-semibold text-[color:var(--text)]">
+                        Expected impact:
+                      </span>{" "}
+                      {issue.impact}
                     </p>
-                    <span className="inline-block rounded-full bg-[color:var(--accent)]/10 border border-[color:var(--accent)]/30 text-[color:var(--accent)] text-xs px-3 py-1 font-medium">
-                      {leak.impact}
-                    </span>
+
+                    <p className="text-sm text-[color:var(--muted)]">
+                      <span className="font-semibold text-[color:var(--text)]">
+                        Recommended fix:
+                      </span>{" "}
+                      {issue.recommendedFix}
+                    </p>
                   </div>
                 </div>
               </div>

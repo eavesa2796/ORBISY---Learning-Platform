@@ -7,21 +7,28 @@ export const runtime = "nodejs";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-function buildUnsubscribeFooter(email: string): string {
+function buildUnsubscribeFooter(email: string, mailingAddress: string): string {
   const link = generateUnsubscribeLink(email);
-  return `\n\n---\nYou received this because your business was identified as a match for ORBISY's HVAC growth system.\nTo stop receiving these emails: ${link}\n\nORBISY · HVAC Revenue Recovery System`;
+  return `\n\n---\nYou received this because your business was identified as a match for ORBISY's HVAC growth system.\nTo stop receiving these emails: ${link}\n\nORBISY\n${mailingAddress}`;
 }
 
 function validateCanSpam(
   subject: string,
   body: string,
   fromEmail: string,
+  mailingAddress: string,
 ): string[] {
   const violations: string[] = [];
   if (!subject.trim()) violations.push("Subject line is required (CAN-SPAM)");
   if (!body.trim()) violations.push("Email body is required");
-  if (!fromEmail.includes("@"))
+  if (!fromEmail.includes("@")) {
     violations.push("Valid from address required (CAN-SPAM)");
+  }
+  if (!mailingAddress.trim()) {
+    violations.push(
+      "Physical mailing address is required in footer (CAN-SPAM)",
+    );
+  }
   if (
     body.toLowerCase().includes("make money fast") ||
     body.toLowerCase().includes("free money")
@@ -31,6 +38,14 @@ function validateCanSpam(
   return violations;
 }
 
+function getUtcDayRange(now = new Date()): { start: Date; end: Date } {
+  const start = new Date(now);
+  start.setUTCHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return { start, end };
+}
+
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -38,9 +53,22 @@ export async function POST(
   const { id } = await params;
 
   const fromEmail = process.env.CONTACT_FROM || process.env.RESEND_FROM_EMAIL;
+  const mailingAddress = process.env.MAILING_ADDRESS || "";
+  const dailySendCap = Math.max(
+    1,
+    parseInt(process.env.OUTREACH_DAILY_SEND_CAP || "75", 10),
+  );
+
   if (!fromEmail) {
     return NextResponse.json(
       { error: "CONTACT_FROM env var is not configured" },
+      { status: 503 },
+    );
+  }
+
+  if (!mailingAddress.trim()) {
+    return NextResponse.json(
+      { error: "MAILING_ADDRESS env var is required for CAN-SPAM compliance" },
       { status: 503 },
     );
   }
@@ -90,11 +118,34 @@ export async function POST(
       message.subject,
       message.body,
       fromEmail,
+      mailingAddress,
     );
     if (violations.length > 0) {
       return NextResponse.json(
         { error: "CAN-SPAM compliance failure", violations },
         { status: 422 },
+      );
+    }
+
+    // Daily sender cap guardrail
+    const { start, end } = getUtcDayRange();
+    const sentToday = await prisma.salesOutreachMessage.count({
+      where: {
+        status: "SENT",
+        sentAt: {
+          gte: start,
+          lt: end,
+        },
+      },
+    });
+    if (sentToday >= dailySendCap) {
+      return NextResponse.json(
+        {
+          error: `Daily sender cap reached (${dailySendCap}). Try again tomorrow.`,
+          sentToday,
+          dailySendCap,
+        },
+        { status: 429 },
       );
     }
 
@@ -123,7 +174,7 @@ export async function POST(
         ? `https://${process.env.VERCEL_URL}`
         : "http://localhost:3000");
 
-    const footer = buildUnsubscribeFooter(recipientEmail);
+    const footer = buildUnsubscribeFooter(recipientEmail, mailingAddress);
     const fullBody = message.body + footer;
 
     // Build audit link to attach to the email

@@ -3,6 +3,25 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
+const EXTRACTED_EVIDENCE_CODES = new Set([
+  "REV_EMERGENCY",
+  "REV_FINANCING",
+  "REV_SERVICE_AREAS",
+  "REV_VISIBILITY",
+  "PAIN_NO_MISSED_CALL_TEXT",
+  "PAIN_NO_ONLINE_BOOKING",
+  "PAIN_NO_CHAT_TEXT",
+  "PAIN_NO_AFTER_HOURS",
+  "PAIN_WEAK_ESTIMATE_FLOW",
+  "PAIN_MOBILE_UX",
+  "PAIN_WEAK_ESTIMATE_FOLLOWUP",
+  "PAIN_REVIEW_COMMS",
+  "PAIN_FORM_FRICTION",
+  "DISQ_ADVANCED_AUTOMATION",
+  "DISQ_ADVANCED_TOOLS",
+  "DISQ_MODERATE_TOOLS",
+]);
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -65,6 +84,7 @@ export async function GET(request: NextRequest) {
           disqualifiers: row.disqualifiers,
         },
         topEvidence: row.evidence
+          .filter((e) => EXTRACTED_EVIDENCE_CODES.has(e.code))
           .sort((a, b) => Math.abs(b.points) - Math.abs(a.points))
           .slice(0, 5)
           .map((e) => ({
