@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { generateUnsubscribeLink } from "@/lib/outreach/security";
 import { Resend } from "resend";
 
 export const runtime = "nodejs";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-function buildUnsubscribeFooter(email: string, baseUrl: string): string {
-  // Use the existing outreach unsubscribe endpoint
-  const link = `${baseUrl}/api/outreach/unsubscribe?email=${encodeURIComponent(email)}`;
+function buildUnsubscribeFooter(email: string): string {
+  const link = generateUnsubscribeLink(email);
   return `\n\n---\nYou received this because your business was identified as a match for ORBISY's HVAC growth system.\nTo stop receiving these emails: ${link}\n\nORBISY · HVAC Revenue Recovery System`;
 }
 
@@ -123,7 +123,7 @@ export async function POST(
         ? `https://${process.env.VERCEL_URL}`
         : "http://localhost:3000");
 
-    const footer = buildUnsubscribeFooter(recipientEmail, baseUrl);
+    const footer = buildUnsubscribeFooter(recipientEmail);
     const fullBody = message.body + footer;
 
     // Build audit link to attach to the email
