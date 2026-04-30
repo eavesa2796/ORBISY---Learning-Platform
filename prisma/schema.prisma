@@ -439,10 +439,13 @@ model SalesOutreachMessage {
   bounceType         String?
   bounceReason       String?
   complianceSnapshot Json?
+  replyIntent        String?
+  replySnippet       String?             @db.Text
   company            SalesCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   contact            SalesContact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
 
   @@index([companyId])
   @@index([contactId])
   @@index([status])
+  @@index([replyIntent])
 }
