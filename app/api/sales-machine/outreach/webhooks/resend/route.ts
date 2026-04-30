@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createHmac, timingSafeEqual } from "crypto";
 
 export const runtime = "nodejs";
 
@@ -28,12 +29,46 @@ function getRecipientEmail(data?: ResendBouncePayload["data"]): string | null {
   return parseEmail(raw);
 }
 
+function verifyResendSignature(
+  signature: string | null,
+  body: Buffer,
+  secret: string,
+): boolean {
+  if (!signature || !signature.startsWith("t=")) {
+    return false;
+  }
+
+  const parts = signature.split(",");
+  const timestamp = parts[0]?.replace("t=", "");
+  const receivedSigPart = parts[1]?.replace("v1=", "");
+
+  if (!timestamp || !receivedSigPart) {
+    return false;
+  }
+
+  const signedContent = `${timestamp}.${body.toString()}`;
+  const expectedSig = createHmac("sha256", secret)
+    .update(signedContent)
+    .digest("hex");
+
+  try {
+    return timingSafeEqual(
+      Buffer.from(receivedSigPart),
+      Buffer.from(expectedSig),
+    );
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const secret = process.env.OUTREACH_WEBHOOK_SECRET;
+    const secret = process.env.RESEND_WEBHOOK_SECRET;
+    const body = Buffer.from(await request.arrayBuffer());
+
     if (secret) {
-      const incoming = request.headers.get("x-orbisy-webhook-secret");
-      if (incoming !== secret) {
+      const signature = request.headers.get("x-resend-signature");
+      if (!verifyResendSignature(signature, body, secret)) {
         return NextResponse.json(
           { error: "Unauthorized webhook" },
           { status: 401 },
@@ -41,7 +76,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const payload = (await request.json()) as ResendBouncePayload;
+    const payload = JSON.parse(body.toString()) as ResendBouncePayload;
     const eventType = (payload.type || "").toLowerCase();
 
     if (!eventType.includes("bounce")) {

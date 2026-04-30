@@ -438,6 +438,7 @@ model SalesOutreachMessage {
   repliedAt          DateTime?
   bounceType         String?
   bounceReason       String?
+  complianceSnapshot Json?
   company            SalesCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
   contact            SalesContact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
 

@@ -113,14 +113,29 @@ export async function POST(
       );
     }
 
-    // CAN-SPAM compliance check
+    // CAN-SPAM compliance check (build snapshot incrementally)
+    const checkedAt = new Date().toISOString();
+    const mailingAddressPresent = mailingAddress.trim().length > 0;
+
     const violations = validateCanSpam(
       message.subject,
       message.body,
       fromEmail,
       mailingAddress,
     );
+
     if (violations.length > 0) {
+      const complianceSnapshot = {
+        checkedAt,
+        violations,
+        mailingAddressPresent,
+        dailyCapStatus: { sent: 0, cap: dailySendCap },
+        suppressionCheckResult: false,
+      };
+      await prisma.salesOutreachMessage.update({
+        where: { id },
+        data: { complianceSnapshot },
+      });
       return NextResponse.json(
         { error: "CAN-SPAM compliance failure", violations },
         { status: 422 },
@@ -138,7 +153,23 @@ export async function POST(
         },
       },
     });
+
     if (sentToday >= dailySendCap) {
+      const complianceSnapshot = {
+        checkedAt,
+        violations: [],
+        mailingAddressPresent,
+        dailyCapStatus: { sent: sentToday, cap: dailySendCap },
+        suppressionCheckResult: false,
+      };
+      await prisma.salesOutreachMessage.update({
+        where: { id },
+        data: { complianceSnapshot },
+      });
+      await prisma.salesOutreachMessage.update({
+        where: { id },
+        data: { complianceSnapshot },
+      });
       return NextResponse.json(
         {
           error: `Daily sender cap reached (${dailySendCap}). Try again tomorrow.`,
@@ -153,10 +184,23 @@ export async function POST(
     const suppressed = await prisma.outreachUnsubscribe.findUnique({
       where: { email: recipientEmail.toLowerCase() },
     });
+    const suppressionCheckResult = !!suppressed;
+
+    const compliantSnapshot = {
+      checkedAt,
+      violations: [],
+      mailingAddressPresent,
+      dailyCapStatus: { sent: sentToday, cap: dailySendCap },
+      suppressionCheckResult,
+    };
+
     if (suppressed) {
       await prisma.salesOutreachMessage.update({
         where: { id },
-        data: { status: "STOPPED" },
+        data: {
+          status: "STOPPED",
+          complianceSnapshot: compliantSnapshot,
+        },
       });
       return NextResponse.json(
         {
@@ -195,6 +239,10 @@ export async function POST(
     });
 
     if (error) {
+      await prisma.salesOutreachMessage.update({
+        where: { id },
+        data: { complianceSnapshot: compliantSnapshot },
+      });
       return NextResponse.json(
         { error: `Resend error: ${error.message || JSON.stringify(error)}` },
         { status: 502 },
@@ -206,6 +254,7 @@ export async function POST(
       data: {
         status: "SENT",
         sentAt: new Date(),
+        complianceSnapshot: compliantSnapshot,
       },
     });
 
