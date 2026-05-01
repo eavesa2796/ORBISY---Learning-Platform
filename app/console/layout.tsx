@@ -15,5 +15,9 @@ export default async function ConsoleLayout({
     redirect("/login");
   }
 
+  if (session.userRole !== "ADMIN" && session.userRole !== "SALES") {
+    redirect("/portal");
+  }
+
   return <ConsoleClientLayout>{children}</ConsoleClientLayout>;
 }

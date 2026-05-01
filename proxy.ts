@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export function proxy(request: NextRequest) {
-  // Check if user is trying to access /console routes
-  if (request.nextUrl.pathname.startsWith("/console")) {
+  // Check if user is trying to access protected app surfaces
+  if (
+    request.nextUrl.pathname.startsWith("/console") ||
+    request.nextUrl.pathname.startsWith("/portal")
+  ) {
     // Check for session cookie
     const sessionToken = request.cookies.get("session-token")?.value;
 
@@ -23,5 +26,5 @@ export function proxy(request: NextRequest) {
 
 // Configure which routes to run proxy on
 export const config = {
-  matcher: ["/console/:path*", "/console"],
+  matcher: ["/console/:path*", "/console", "/portal/:path*", "/portal"],
 };

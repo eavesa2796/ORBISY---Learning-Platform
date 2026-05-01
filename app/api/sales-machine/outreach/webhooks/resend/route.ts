@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createHmac, timingSafeEqual } from "crypto";
+import { authErrorToHttp, requireInternalUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -65,15 +66,27 @@ export async function POST(request: NextRequest) {
   try {
     const secret = process.env.RESEND_WEBHOOK_SECRET;
     const body = Buffer.from(await request.arrayBuffer());
+    let authorized = false;
 
     if (secret) {
       const signature = request.headers.get("x-resend-signature");
-      if (!verifyResendSignature(signature, body, secret)) {
-        return NextResponse.json(
-          { error: "Unauthorized webhook" },
-          { status: 401 },
-        );
+      authorized = verifyResendSignature(signature, body, secret);
+    }
+
+    if (!authorized) {
+      try {
+        await requireInternalUser();
+        authorized = true;
+      } catch (error) {
+        const auth = authErrorToHttp(error);
+        if (auth) {
+          return NextResponse.json({ error: auth.message }, { status: auth.status });
+        }
       }
+    }
+
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized webhook" }, { status: 401 });
     }
 
     const payload = JSON.parse(body.toString()) as ResendBouncePayload;

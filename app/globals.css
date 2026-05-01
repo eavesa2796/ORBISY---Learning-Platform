@@ -22,3 +22,31 @@
     transform: none;
   }
 }
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .proposal-print-root {
+    background: #ffffff !important;
+    padding: 0 !important;
+  }
+
+  .proposal-print-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1px solid #d1d5db !important;
+    background: #ffffff !important;
+  }
+
+  a {
+    color: #111827 !important;
+    text-decoration: none !important;
+  }
+}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateUnsubscribeLink } from "@/lib/outreach/security";
 import { Resend } from "resend";
+import { authErrorToHttp, requireInternalUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -50,6 +51,15 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  try {
+    await requireInternalUser();
+  } catch (error) {
+    const auth = authErrorToHttp(error);
+    if (auth) {
+      return NextResponse.json({ error: auth.message }, { status: auth.status });
+    }
+  }
+
   const { id } = await params;
 
   const fromEmail = process.env.CONTACT_FROM || process.env.RESEND_FROM_EMAIL;

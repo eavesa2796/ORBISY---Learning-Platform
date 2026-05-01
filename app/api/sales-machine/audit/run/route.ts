@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { extractAudit } from "@/lib/sales/audit-extractor";
 import { scoreLead, type ScoringInput } from "@/lib/sales/scoring";
+import { authErrorToHttp, requireInternalUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,15 @@ export const runtime = "nodejs";
 export const maxDuration = 55;
 
 export async function POST(request: NextRequest) {
+  try {
+    await requireInternalUser();
+  } catch (error) {
+    const auth = authErrorToHttp(error);
+    if (auth) {
+      return NextResponse.json({ error: auth.message }, { status: auth.status });
+    }
+  }
+
   try {
     const body = (await request.json()) as {
       companyId?: string;

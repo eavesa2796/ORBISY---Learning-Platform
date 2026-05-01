@@ -14,6 +14,9 @@ type SummaryMetrics = {
   bounceRate: number;
   avgBuyingLikelihood: number;
   hotLeads: number;
+  proposalsNeedingFollowUp: number;
+  acceptedProposalsThisMonth: number;
+  estimatedAcceptedRevenueThisMonth: number;
   byStatus: Record<string, number>;
 };
 
@@ -101,7 +104,7 @@ export default function ConsolePage() {
         <p className="text-xs font-semibold uppercase tracking-wider text-[color:var(--muted)] mb-3">
           Buying signals
         </p>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
           <MetricCard
             title="Avg Buying Likelihood"
             value={m?.avgBuyingLikelihood ?? 0}
@@ -143,6 +146,35 @@ export default function ConsolePage() {
                   : "bad"
             }
           />
+          <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] p-5">
+            <p className="text-sm text-[color:var(--muted)]">Proposals Needing Follow-Up</p>
+            <p className="text-3xl font-bold mt-2 text-yellow-400">
+              {(m?.proposalsNeedingFollowUp ?? 0).toLocaleString()}
+            </p>
+            <a
+              href="/console/proposals#proposal-history"
+              className="mt-3 inline-flex text-sm font-semibold text-[color:var(--accent)] hover:opacity-90"
+            >
+              Open Proposal History
+            </a>
+          </div>
+          <MetricCard
+            title="Accepted This Month"
+            value={m?.acceptedProposalsThisMonth ?? 0}
+            highlight={(m?.acceptedProposalsThisMonth ?? 0) > 0 ? "good" : "muted"}
+          />
+          <div className="rounded-xl border border-[color:var(--border)] bg-[color:var(--panel)] p-5">
+            <p className="text-sm text-[color:var(--muted)]">Accepted Revenue This Month</p>
+            <p className="text-3xl font-bold mt-2 text-emerald-400">
+              ${(m?.estimatedAcceptedRevenueThisMonth ?? 0).toLocaleString()}
+            </p>
+            <a
+              href="/console/proposals#proposal-history"
+              className="mt-3 inline-flex text-sm font-semibold text-[color:var(--accent)] hover:opacity-90"
+            >
+              View Accepted Proposals
+            </a>
+          </div>
         </div>
       </div>
 

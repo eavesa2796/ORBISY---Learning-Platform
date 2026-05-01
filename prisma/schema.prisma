@@ -10,23 +10,32 @@ datasource db {
 
 enum UserRole {
   ADMIN
-  USER
+  SALES
+  CUSTOMER
 }
 
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  password     String    // Hashed password
-  name         String
-  role         UserRole  @default(USER)
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  lastLoginAt  DateTime?
-  
-  sessions     Session[]
+  id                 String       @id @default(cuid())
+  email              String       @unique
+  password           String       // Hashed password
+  name               String
+  role               UserRole     @default(SALES)
+  isActive           Boolean      @default(true)
+  customerCompanyId  String?
+  customerContactId  String?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  lastLoginAt        DateTime?
+
+  sessions           Session[]
+  customerCompany    SalesCompany? @relation("CustomerCompanyUsers", fields: [customerCompanyId], references: [id], onDelete: SetNull)
+  customerContact    SalesContact? @relation("CustomerContactUsers", fields: [customerContactId], references: [id], onDelete: SetNull)
+  createdProposals   SalesProposal[] @relation("SalesProposalCreatedBy")
 
   @@index([email])
+  @@index([role])
+  @@index([customerCompanyId])
+  @@index([customerContactId])
 }
 
 model Session {
@@ -261,6 +270,63 @@ enum SalesOutreachStatus {
   STOPPED
 }
 
+enum SalesOpportunityStage {
+  NEW
+  QUALIFIED
+  PROPOSAL_DRAFTED
+  PROPOSAL_SENT
+  WON
+  LOST
+}
+
+enum SalesEquipmentType {
+  CONDENSER
+  AIR_HANDLER
+  FURNACE
+  HEAT_PUMP
+  COIL
+  PACKAGE_UNIT
+  THERMOSTAT
+  IAQ
+  OTHER
+}
+
+enum SalesCatalogPricingMode {
+  FIXED_SELL_PRICE
+  COST_PLUS_MARGIN
+}
+
+enum SalesProposalStatus {
+  DRAFT
+  SENT
+  VIEWED
+  ACCEPTED
+  DECLINED
+}
+
+enum SalesProposalTier {
+  GOOD
+  BETTER
+  BEST
+}
+
+enum SalesProposalAddonType {
+  ADDON
+  DISCOUNT
+  REBATE
+}
+
+enum SalesProposalEventType {
+  DRAFT_CREATED
+  SENT
+  VIEWED
+  ACCEPTED
+  DECLINED
+  EMAIL_SENT
+  FOLLOW_UP_SENT
+  STATUS_CHANGED
+}
+
 model SalesCompany {
   id                  String             @id @default(cuid())
   slug                String             @unique
@@ -284,6 +350,9 @@ model SalesCompany {
   audits              SalesWebsiteAudit[]
   scores              SalesLeadScore[]
   outreachMessages    SalesOutreachMessage[]
+  customerUsers       User[]              @relation("CustomerCompanyUsers")
+  opportunities       SalesOpportunity[]
+  proposals           SalesProposal[]
 
   @@index([slug])
   @@index([name])
@@ -306,6 +375,9 @@ model SalesContact {
   updatedAt   DateTime     @updatedAt
   company     SalesCompany @relation(fields: [companyId], references: [id], onDelete: Cascade)
   messages    SalesOutreachMessage[]
+  customerUsers User[]     @relation("CustomerContactUsers")
+  opportunities SalesOpportunity[]
+  proposals   SalesProposal[]
 
   @@index([companyId])
   @@index([email])
@@ -448,4 +520,166 @@ model SalesOutreachMessage {
   @@index([contactId])
   @@index([status])
   @@index([replyIntent])
+}
+
+model SalesOpportunity {
+  id                 String                @id @default(cuid())
+  companyId          String
+  contactId          String?
+  title              String
+  stage              SalesOpportunityStage @default(NEW)
+  estimatedJobValue  Decimal?              @db.Decimal(12, 2)
+  targetInstallDate  DateTime?
+  notes              String?               @db.Text
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  company            SalesCompany          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact            SalesContact?         @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  proposals          SalesProposal[]
+
+  @@index([companyId])
+  @@index([contactId])
+  @@index([stage])
+  @@index([createdAt])
+}
+
+model SalesHvacCatalogItem {
+  id                String                  @id @default(cuid())
+  equipmentType     SalesEquipmentType
+  brand             String
+  modelNumber       String
+  sizeTonnage       String?
+  efficiencyRating  String?
+  cost              Decimal                 @db.Decimal(12, 2)
+  pricingMode       SalesCatalogPricingMode @default(COST_PLUS_MARGIN)
+  sellPrice         Decimal?                @db.Decimal(12, 2)
+  marginPercent     Float?
+  description       String?                 @db.Text
+  imageUrl          String?
+  brochureUrl       String?
+  isActive          Boolean                 @default(true)
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  proposalOptions   SalesProposalOption[]
+
+  @@index([equipmentType])
+  @@index([brand])
+  @@index([isActive])
+  @@unique([brand, modelNumber])
+}
+
+model SalesProposal {
+  id                String              @id @default(cuid())
+  opportunityId     String
+  companyId         String
+  contactId         String?
+  publicToken       String              @unique
+  status            SalesProposalStatus @default(DRAFT)
+  title             String
+  notes             String?             @db.Text
+  companyProposalFooter String?         @db.Text
+  proposalDisclaimer String?            @db.Text
+  version           Int                 @default(1)
+  selectedOptionId  String?
+  createdByUserId   String?
+  sentAt            DateTime?
+  viewedAt          DateTime?
+  acceptedAt        DateTime?
+  declinedAt        DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  opportunity       SalesOpportunity    @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  company           SalesCompany        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contact           SalesContact?       @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  createdBy         User?               @relation("SalesProposalCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  selectedOption    SalesProposalOption? @relation("SalesProposalSelectedOption", fields: [selectedOptionId], references: [id], onDelete: SetNull)
+  options           SalesProposalOption[] @relation("SalesProposalOptions")
+  events            SalesProposalEvent[]
+
+  @@index([opportunityId])
+  @@index([companyId])
+  @@index([contactId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model SalesProposalOption {
+  id                      String             @id @default(cuid())
+  proposalId              String
+  tier                    SalesProposalTier
+  title                   String
+  summary                 String?            @db.Text
+  equipmentItemId         String?
+  equipmentSnapshot       Json?
+  warrantyLabel           String?
+  financingApr            Float?
+  financingMonths         Int?
+  monthlyPaymentEstimate  Decimal?           @db.Decimal(12, 2)
+  equipmentCost           Decimal            @db.Decimal(12, 2)
+  laborCost               Decimal            @db.Decimal(12, 2)
+  permitFee               Decimal            @default(0) @db.Decimal(12, 2)
+  taxRatePercent          Float              @default(0)
+  taxAmount               Decimal            @default(0) @db.Decimal(12, 2)
+  preTaxCustomerPrice     Decimal            @default(0) @db.Decimal(12, 2)
+  addonsTotal             Decimal            @db.Decimal(12, 2)
+  discountsTotal          Decimal            @db.Decimal(12, 2)
+  rebatesTotal            Decimal            @db.Decimal(12, 2)
+  totalCost               Decimal            @db.Decimal(12, 2)
+  grossMarginAmount       Decimal            @db.Decimal(12, 2)
+  grossMarginPercent      Float
+  finalCustomerPrice      Decimal            @db.Decimal(12, 2)
+  sortOrder               Int                @default(0)
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  proposal                SalesProposal      @relation("SalesProposalOptions", fields: [proposalId], references: [id], onDelete: Cascade)
+  equipmentItem           SalesHvacCatalogItem? @relation(fields: [equipmentItemId], references: [id], onDelete: SetNull)
+  selectedByProposal      SalesProposal[]    @relation("SalesProposalSelectedOption")
+  addonLines              SalesProposalAddonLine[]
+
+  @@unique([proposalId, tier])
+  @@index([proposalId])
+  @@index([equipmentItemId])
+}
+
+model SalesProposalAddonLine {
+  id         String                @id @default(cuid())
+  optionId   String
+  type       SalesProposalAddonType
+  label      String
+  amount     Decimal               @db.Decimal(12, 2)
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+  option     SalesProposalOption   @relation(fields: [optionId], references: [id], onDelete: Cascade)
+
+  @@index([optionId])
+  @@index([type])
+}
+
+model SalesProposalEvent {
+  id         String                 @id @default(cuid())
+  proposalId String
+  eventType  SalesProposalEventType
+  metadata   Json?
+  occurredAt DateTime               @default(now())
+  proposal   SalesProposal          @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@index([proposalId])
+  @@index([eventType])
+  @@index([occurredAt])
+}
+
+model SalesProposalSettings {
+  id                    String   @id @default("default")
+  defaultLaborCost      Decimal  @db.Decimal(12, 2)
+  defaultFinancingApr   Float
+  defaultFinancingMonths Int
+  defaultWarrantyGood   String
+  defaultWarrantyBetter String
+  defaultWarrantyBest   String
+  permitFeeDefault      Decimal  @db.Decimal(12, 2)
+  taxRatePercent        Float
+  companyProposalFooter String   @db.Text
+  proposalDisclaimer    String   @db.Text
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }

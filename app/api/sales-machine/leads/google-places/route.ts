@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { scoreLead, type ScoringInput } from "@/lib/sales/scoring";
+import { authErrorToHttp, requireInternalUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -128,6 +129,15 @@ async function fetchPlaceDetails(
 }
 
 export async function POST(request: NextRequest) {
+  try {
+    await requireInternalUser();
+  } catch (error) {
+    const auth = authErrorToHttp(error);
+    if (auth) {
+      return NextResponse.json({ error: auth.message }, { status: auth.status });
+    }
+  }
+
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) {
     return NextResponse.json(

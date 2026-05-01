@@ -5,6 +5,7 @@ import {
   type ScoringInput,
   type ScoringSignals,
 } from "@/lib/sales/scoring";
+import { authErrorToHttp, requireInternalUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -78,6 +79,15 @@ function defaultScoringInput(lead: IncomingLead): ScoringInput {
 }
 
 export async function POST(request: NextRequest) {
+  try {
+    await requireInternalUser();
+  } catch (error) {
+    const auth = authErrorToHttp(error);
+    if (auth) {
+      return NextResponse.json({ error: auth.message }, { status: auth.status });
+    }
+  }
+
   try {
     const body = (await request.json()) as Payload;
 

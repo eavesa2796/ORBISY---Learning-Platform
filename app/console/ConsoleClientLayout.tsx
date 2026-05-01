@@ -50,6 +50,9 @@ export default function ConsoleClientLayout({
           <NavLink href="/console/campaigns" icon="✍️">
             Playbooks
           </NavLink>
+          <NavLink href="/console/proposals" icon="🧾">
+            Proposals
+          </NavLink>
           <NavLink href="/console/inbox" icon="📬">
             Replies
           </NavLink>

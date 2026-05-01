@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { authErrorToHttp, requireInternalUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,15 @@ const EXTRACTED_EVIDENCE_CODES = new Set([
 ]);
 
 export async function GET(request: NextRequest) {
+  try {
+    await requireInternalUser();
+  } catch (error) {
+    const auth = authErrorToHttp(error);
+    if (auth) {
+      return NextResponse.json({ error: auth.message }, { status: auth.status });
+    }
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const minScore = parseInt(searchParams.get("minScore") || "60", 10);

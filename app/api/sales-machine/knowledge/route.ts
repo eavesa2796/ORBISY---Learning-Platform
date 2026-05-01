@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { chunkText } from "@/lib/sales/rag";
+import { authErrorToHttp, requireInternalUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,15 @@ type CreateKnowledgePayload = {
 };
 
 export async function GET() {
+  try {
+    await requireInternalUser();
+  } catch (error) {
+    const auth = authErrorToHttp(error);
+    if (auth) {
+      return NextResponse.json({ ok: false, error: auth.message }, { status: auth.status });
+    }
+  }
+
   try {
     const docs = await prisma.salesKnowledgeDocument.findMany({
       include: {
@@ -48,6 +58,15 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  try {
+    await requireInternalUser();
+  } catch (error) {
+    const auth = authErrorToHttp(error);
+    if (auth) {
+      return NextResponse.json({ ok: false, error: auth.message }, { status: auth.status });
+    }
+  }
+
   try {
     const body = (await request.json()) as CreateKnowledgePayload;
 

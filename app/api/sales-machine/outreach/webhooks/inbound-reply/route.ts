@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createHmac, timingSafeEqual } from "crypto";
 import { classifyReplyIntent } from "@/lib/sales/reply-intent";
+import { authErrorToHttp, requireInternalUser } from "@/lib/session";
 
 export const runtime = "nodejs";
 
@@ -61,12 +62,27 @@ export async function POST(request: NextRequest) {
   try {
     const secret = process.env.RESEND_WEBHOOK_SECRET;
     const body = Buffer.from(await request.arrayBuffer());
+    let authorized = false;
 
     if (secret) {
       const sig = request.headers.get("x-resend-signature");
-      if (!verifySignature(sig, body, secret)) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      authorized = verifySignature(sig, body, secret);
+    }
+
+    if (!authorized) {
+      try {
+        await requireInternalUser();
+        authorized = true;
+      } catch (error) {
+        const auth = authErrorToHttp(error);
+        if (auth) {
+          return NextResponse.json({ error: auth.message }, { status: auth.status });
+        }
       }
+    }
+
+    if (!authorized) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const payload = JSON.parse(body.toString()) as InboundReplyPayload;
