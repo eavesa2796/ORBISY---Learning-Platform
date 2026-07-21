@@ -1,0 +1,3 @@
+equipmentType,brand,modelNumber,sizeTonnage,efficiencyRating,cost,pricingMode,sellPrice,marginPercent,description,imageUrl,brochureUrl,isActive
+HEAT_PUMP,Carrier,25VNA4,4-ton,SEER2 18,6400,COST_PLUS_MARGIN,,35,Variable speed heat pump,,,true
+FURNACE,Trane,XV95,,95 AFUE,3200,FIXED_SELL_PRICE,6100,,Two-stage gas furnace,,,true
