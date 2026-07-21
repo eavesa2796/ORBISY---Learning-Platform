@@ -13,9 +13,8 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Anthony Build Journal",
-  description:
-    "A personal website documenting my growth as a developer through learning notes, project builds, and weekly reflections.",
+  title: "Anthony Build Log",
+  description: "A personal website to track my growth, learning, and projects.",
 };
 
 export default function RootLayout({
