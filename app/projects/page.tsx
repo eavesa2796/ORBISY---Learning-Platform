@@ -1,36 +1,28 @@
-import Link from "next/link";
+import SiteNav from "@/components/SiteNav";
 
 const projects = [
   {
-    name: "Build Journal",
-    note: "A public tracker for goals, lessons, and shipping consistency.",
+    name: "Learning Platform Core",
+    note: "Tracks, lessons, and progress API backed by PostgreSQL.",
   },
   {
-    name: "Workflow Sandbox",
-    note: "A personal app where I test new UI and API patterns quickly.",
+    name: "Habit & Streak Engine",
+    note: "Daily study check-ins, streak tracking, and consistency metrics.",
   },
   {
-    name: "Learning Lab",
-    note: "Small experiments to deeply understand one concept at a time.",
+    name: "SQL Query Playground",
+    note: "Curated query exercises with real dataset patterns.",
   },
 ];
 
 export default function ProjectsPage() {
   return (
     <main className="shell">
-      <nav className="topbar card">
-        <p className="brand">Anthony Build Log</p>
-        <div className="links">
-          <Link href="/">Home</Link>
-          <Link href="/learning">Learning</Link>
-          <Link href="/about">About</Link>
-          <Link href="/contact">Contact</Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       <section className="page-card card">
         <p className="label">Projects</p>
-        <h1>What I am building</h1>
+        <h1>Full-stack projects I will ship</h1>
         <ul>
           {projects.map((project) => (
             <li key={project.name}>

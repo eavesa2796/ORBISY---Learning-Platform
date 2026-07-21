@@ -1,25 +1,20 @@
-import Link from "next/link";
+import SiteNav from "@/components/SiteNav";
 
 export default function AboutPage() {
   return (
     <main className="shell">
-      <nav className="topbar card">
-        <p className="brand">Anthony Build Log</p>
-        <div className="links">
-          <Link href="/">Home</Link>
-          <Link href="/learning">Learning</Link>
-          <Link href="/projects">Projects</Link>
-          <Link href="/contact">Contact</Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       <section className="page-card card">
         <p className="label">About</p>
-        <h1>Why this site exists</h1>
+        <h1>Why I built this learning platform</h1>
         <p>
-          I built this website as a public log for my development journey. My
-          goal is to become an elite builder by shipping consistently, learning
-          from mistakes, and documenting the process.
+          I want one place where I can learn frontend, backend, and databases
+          together by building projects end-to-end. This site is that lab.
+        </p>
+        <p>
+          The stack is intentional: React for UI, FastAPI for Python backend,
+          and PostgreSQL for relational data modeling and SQL practice.
         </p>
       </section>
     </main>

@@ -1,32 +1,55 @@
 import Link from "next/link";
+import BackendStatus from "@/components/BackendStatus";
+import SiteNav from "@/components/SiteNav";
+
+const starterTracks = [
+  {
+    name: "React",
+    target: "Build interactive UIs with modern component patterns.",
+  },
+  {
+    name: "Python",
+    target: "Ship a backend API with clean business logic.",
+  },
+  {
+    name: "SQL",
+    target: "Design reliable schemas and write production queries.",
+  },
+];
 
 export default function Home() {
   return (
     <main className="shell">
-      <nav className="topbar card">
-        <p className="brand">Anthony Build Log</p>
-        <div className="links">
-          <Link href="/learning">Learning</Link>
-          <Link href="/projects">Projects</Link>
-          <Link href="/about">About</Link>
-          <Link href="/contact">Contact</Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       <section className="hero card">
-        <p className="label">Starting Fresh</p>
-        <h1>Building in public, one week at a time.</h1>
+        <p className="label">Full-Stack Learning Platform</p>
+        <h1>Train React, Python, and SQL by building real systems.</h1>
         <p>
-          This site is my clean slate. I use it to track what I learn, what I
-          build, and how I improve.
+          This platform is my hands-on lab. Every lesson maps to code, database
+          changes, and measurable progress.
         </p>
+        <BackendStatus />
         <div className="actions">
           <Link href="/learning" className="btn primary">
-            View Learning Log
+            Start Learning
           </Link>
-          <Link href="/projects" className="btn ghost">
-            Explore Projects
+          <Link href="/dashboard" className="btn ghost">
+            View Dashboard
           </Link>
+        </div>
+      </section>
+
+      <section className="page-card card">
+        <p className="label">Starter Tracks</p>
+        <h2 className="section-head">What I am learning first</h2>
+        <div className="grid-three">
+          {starterTracks.map((track) => (
+            <article key={track.name} className="mini-card">
+              <h3>{track.name}</h3>
+              <p>{track.target}</p>
+            </article>
+          ))}
         </div>
       </section>
     </main>

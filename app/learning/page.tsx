@@ -1,33 +1,52 @@
-import Link from "next/link";
+import SiteNav from "@/components/SiteNav";
 
-const topics = [
-  "TypeScript architecture",
-  "System design for small products",
-  "Testing user-critical flows",
-  "Shipping and iteration speed",
+const tracks = [
+  {
+    name: "React",
+    lessons: [
+      "Components, props, and state",
+      "Routing and data fetching",
+      "Reusable UI patterns and accessibility",
+    ],
+  },
+  {
+    name: "Python",
+    lessons: [
+      "FastAPI routes and validation",
+      "Service layer and dependency injection",
+      "Testing with pytest",
+    ],
+  },
+  {
+    name: "SQL",
+    lessons: [
+      "Schema design and normalization",
+      "Joins and aggregation queries",
+      "Indexes and query optimization basics",
+    ],
+  },
 ];
 
 export default function LearningPage() {
   return (
     <main className="shell">
-      <nav className="topbar card">
-        <p className="brand">Anthony Build Log</p>
-        <div className="links">
-          <Link href="/">Home</Link>
-          <Link href="/projects">Projects</Link>
-          <Link href="/about">About</Link>
-          <Link href="/contact">Contact</Link>
-        </div>
-      </nav>
+      <SiteNav />
 
       <section className="page-card card">
         <p className="label">Learning</p>
-        <h1>Current focus areas</h1>
-        <ul>
-          {topics.map((topic) => (
-            <li key={topic}>{topic}</li>
+        <h1>Learning tracks and lesson map</h1>
+        <div className="grid-three">
+          {tracks.map((track) => (
+            <article key={track.name} className="mini-card">
+              <h2>{track.name}</h2>
+              <ul>
+                {track.lessons.map((lesson) => (
+                  <li key={lesson}>{lesson}</li>
+                ))}
+              </ul>
+            </article>
           ))}
-        </ul>
+        </div>
       </section>
     </main>
   );
