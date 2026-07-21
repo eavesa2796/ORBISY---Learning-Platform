@@ -1,53 +1,14 @@
+import InteractiveLesson from "@/components/InteractiveLesson";
 import SiteNav from "@/components/SiteNav";
-
-const tracks = [
-  {
-    name: "React",
-    lessons: [
-      "Components, props, and state",
-      "Routing and data fetching",
-      "Reusable UI patterns and accessibility",
-    ],
-  },
-  {
-    name: "Python",
-    lessons: [
-      "FastAPI routes and validation",
-      "Service layer and dependency injection",
-      "Testing with pytest",
-    ],
-  },
-  {
-    name: "SQL",
-    lessons: [
-      "Schema design and normalization",
-      "Joins and aggregation queries",
-      "Indexes and query optimization basics",
-    ],
-  },
-];
+import { lessons } from "@/data/lessons";
 
 export default function LearningPage() {
-  return (
-    <main className="shell">
-      <SiteNav />
+  const featuredLesson = lessons[0];
 
-      <section className="page-card card">
-        <p className="label">Learning</p>
-        <h1>Learning tracks and lesson map</h1>
-        <div className="grid-three">
-          {tracks.map((track) => (
-            <article key={track.name} className="mini-card">
-              <h2>{track.name}</h2>
-              <ul>
-                {track.lessons.map((lesson) => (
-                  <li key={lesson}>{lesson}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </section>
+  return (
+    <main className="shell shell-wide">
+      <SiteNav title="ORBISY Learning Platform" />
+      <InteractiveLesson lesson={featuredLesson} />
     </main>
   );
 }
