@@ -23,3 +23,15 @@ export type Lesson = {
   module: string;
   title: string;
   summary: string;
+  estimatedMinutes: number;
+  prerequisites: string[];
+  objectives: string[];
+  mentalModel: string;
+  explanation: string[];
+  example: string;
+  expectedOutput?: string;
+  memorize: string[];
+  mistakes: string[];
+  checkpoints: Checkpoint[];
+  project: LessonProject;
+};
