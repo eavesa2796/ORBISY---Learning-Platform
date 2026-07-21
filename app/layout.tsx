@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { AppStoreProvider } from "@/store/app-store";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetBrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "ORBISY — Stop Losing HVAC Jobs to Missed Calls and Slow Follow-Up",
-  description:
-    "ORBISY installs missed-call text-back, instant lead response, estimate follow-up, and booking tracking for growing HVAC companies. Book more jobs from leads you already have.",
+  title: "Anthony Build Log",
+  description: "A personal website to track my growth, learning, and projects.",
 };
 
 export default function RootLayout({
@@ -26,9 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${spaceGrotesk.variable} ${jetBrainsMono.variable} antialiased`}
       >
-        {children}
+        <AppStoreProvider>{children}</AppStoreProvider>
       </body>
     </html>
   );
