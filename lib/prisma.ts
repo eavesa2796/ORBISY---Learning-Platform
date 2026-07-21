@@ -10,11 +10,15 @@ const globalForPrisma = globalThis as unknown as {
 console.log("🔧 Initializing Prisma Client with PostgreSQL adapter...");
 console.log("📍 DATABASE_URL exists:", !!process.env.DATABASE_URL);
 
+const connectionString =
+  process.env.DATABASE_URL ??
+  "postgresql://postgres:postgres@127.0.0.1:5432/postgres?schema=public";
+
 // Create connection pool
 const pool =
   globalForPrisma.pool ??
   new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString,
   });
 
 // Create Prisma adapter
